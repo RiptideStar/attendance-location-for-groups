@@ -103,10 +103,6 @@ function LoginForm() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Default credentials: penncbc / penncbc123
-        </p>
       </div>
     </div>
   );

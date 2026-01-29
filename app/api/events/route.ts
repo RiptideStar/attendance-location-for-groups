@@ -5,7 +5,7 @@ import type { EventInsert } from "@/types/event";
 // GET /api/events - Get all events
 export async function GET() {
   try {
-    const { data: events, error } = await supabaseAdmin
+    const { data: events, error } = await (supabaseAdmin as any)
       .from("events")
       .select(
         `
@@ -24,7 +24,7 @@ export async function GET() {
     }
 
     // Transform the data to include attendee count
-    const eventsWithCount = events.map((event) => ({
+    const eventsWithCount = events.map((event: any) => ({
       ...event,
       attendee_count: Array.isArray(event.attendees)
         ? event.attendees.length
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       location_radius_meters: body.location_radius_meters || 50,
     };
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .insert(eventData)
       .select()

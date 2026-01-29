@@ -10,7 +10,7 @@ export async function GET(
   try {
     const { eventId } = await params;
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .select("*")
       .eq("id", eventId)
@@ -88,7 +88,7 @@ export async function PUT(
       }
     }
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .update(updateData)
       .eq("id", eventId)
@@ -121,7 +121,7 @@ export async function DELETE(
   try {
     const { eventId } = await params;
 
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from("events")
       .delete()
       .eq("id", eventId);

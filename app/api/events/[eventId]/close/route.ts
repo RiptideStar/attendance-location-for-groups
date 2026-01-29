@@ -9,7 +9,7 @@ export async function POST(
   try {
     const { eventId } = await params;
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .update({ is_closed: true })
       .eq("id", eventId)
@@ -42,7 +42,7 @@ export async function DELETE(
   try {
     const { eventId } = await params;
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .update({ is_closed: false })
       .eq("id", eventId)

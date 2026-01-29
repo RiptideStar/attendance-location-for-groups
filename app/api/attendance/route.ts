@@ -7,6 +7,7 @@ import {
   createAttendanceCookie,
 } from "@/lib/cookies/attendance-cookie";
 import type { CheckInSubmission, CheckInResponse } from "@/types/attendance";
+import type { Database } from "@/types/database";
 
 // POST /api/attendance - Submit attendance check-in
 export async function POST(request: NextRequest): Promise<NextResponse<CheckInResponse>> {
@@ -82,8 +83,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
       );
     }
 
+    // Type assertion for TypeScript
+    type Event = Database["public"]["Tables"]["events"]["Row"];
+    const typedEvent = event as Event;
+
     // 4. Check if event is manually closed
-    if (event.is_closed) {
+    if (typedEvent.is_closed) {
       return NextResponse.json(
         {
           success: false,
@@ -96,17 +101,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
 
     // 5. Validate time window
     const withinWindow = isWithinEventWindow(
-      event.start_time,
-      event.end_time,
-      event.registration_window_before_minutes,
-      event.registration_window_after_minutes
+      typedEvent.start_time,
+      typedEvent.end_time,
+      typedEvent.registration_window_before_minutes,
+      typedEvent.registration_window_after_minutes
     );
 
     if (!withinWindow) {
       const now = new Date();
       const windowStart = new Date(
-        new Date(event.start_time).getTime() -
-          event.registration_window_before_minutes * 60 * 1000
+        new Date(typedEvent.start_time).getTime() -
+          typedEvent.registration_window_before_minutes * 60 * 1000
       );
 
       if (now < windowStart) {
@@ -133,11 +138,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
     // 6. Validate location (within radius)
     const userCoords = { lat, lng };
     const eventCoords = {
-      lat: event.location_lat,
-      lng: event.location_lng,
+      lat: typedEvent.location_lat,
+      lng: typedEvent.location_lng,
     };
 
-    if (!isWithinRadius(userCoords, eventCoords, event.location_radius_meters)) {
+    if (!isWithinRadius(userCoords, eventCoords, typedEvent.location_radius_meters)) {
       const distance = require("@/lib/geolocation/verification").calculateDistance(
         userCoords,
         eventCoords
@@ -148,7 +153,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
           success: false,
           error: `You are too far from the event location. You are ${Math.round(
             distance
-          )}m away, but must be within ${event.location_radius_meters}m.`,
+          )}m away, but must be within ${typedEvent.location_radius_meters}m.`,
           code: "outside_radius",
         },
         { status: 400 }
@@ -156,7 +161,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
     }
 
     // 7. Insert attendance record into database
-    const { data: attendee, error: insertError } = await supabaseAdmin
+    const { data: attendee, error: insertError } = await (supabaseAdmin as any)
       .from("attendees")
       .insert({
         event_id: eventId,
@@ -183,11 +188,11 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
 
     // 8. Set cookie to prevent duplicate check-ins
     const cookieValue = createAttendanceCookie(eventId);
-    const response = NextResponse.json(
+    const response = NextResponse.json<CheckInResponse>(
       {
         success: true,
         message: "Successfully checked in!",
-        attendee,
+        attendee: attendee as Database["public"]["Tables"]["attendees"]["Row"],
       },
       { status: 201 }
     );

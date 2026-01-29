@@ -123,7 +123,7 @@ export default function EventCheckInPage() {
       const data: CheckInResponse = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || "Failed to check in");
+        throw new Error("error" in data ? data.error : "Failed to check in");
       }
 
       setFlowState("success");

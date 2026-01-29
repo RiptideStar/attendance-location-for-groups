@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get("search");
 
     // Build query
-    let query = supabaseAdmin
+    let query = (supabaseAdmin as any)
       .from("attendees")
       .select(
         `
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to flatten event details
-    const transformedAttendees = attendees.map((attendee) => ({
+    const transformedAttendees = attendees.map((attendee: any) => ({
       id: attendee.id,
       event_id: attendee.event_id,
       name: attendee.name,

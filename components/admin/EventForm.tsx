@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { LocationPicker } from "./LocationPicker";
+import dynamic from "next/dynamic";
 import { utcToLocalInput } from "@/lib/utils/date-helpers";
 import type { Event, EventFormData } from "@/types/event";
+
+const LocationPicker = dynamic(
+  () => import("./LocationPicker").then((mod) => ({ default: mod.LocationPicker })),
+  { ssr: false }
+);
 
 interface EventFormProps {
   initialData?: Event;
