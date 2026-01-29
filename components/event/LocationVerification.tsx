@@ -54,9 +54,7 @@ export function LocationVerification({
           setStatus("verified");
           onVerified(userCoords);
         } else {
-          const error = `You are ${Math.round(
-            distance
-          )}m away from the event location. You must be within ${radiusMeters}m to check in.`;
+          const error = `You are too far from the event location to check in. You must be within ${radiusMeters}m.`;
           setErrorMessage(error);
           setStatus("error");
           onError(error);
