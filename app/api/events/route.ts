@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { EventInsert } from "@/types/event";
+import { upsertOrganizationLocation } from "@/lib/locations/save-location";
 
 // GET /api/events - Get all events for authenticated organization
 export async function GET() {
@@ -33,11 +34,13 @@ export async function GET() {
     }
 
     // Transform the data to include attendee count
+    // Supabase's (count) aggregate returns [{ count: N }], so read the value directly
     const eventsWithCount = events.map((event: any) => ({
       ...event,
-      attendee_count: Array.isArray(event.attendees)
-        ? event.attendees.length
-        : 0,
+      attendee_count:
+        Array.isArray(event.attendees) && event.attendees.length > 0
+          ? event.attendees[0].count
+          : 0,
     }));
 
     return NextResponse.json(eventsWithCount);
@@ -140,6 +143,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Auto-save location for future reuse (fire-and-forget)
+    upsertOrganizationLocation(
+      session.user.organizationId,
+      location_address,
+      location_lat,
+      location_lng
+    );
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {

@@ -98,7 +98,7 @@ export function EventForm({
           htmlFor="title"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Event Title
+          Event Title <span className="text-red-500">*</span>
         </label>
         <input
           id="title"
@@ -123,7 +123,7 @@ export function EventForm({
             htmlFor="startTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Start Time (ET)
+            Start Time (ET) <span className="text-red-500">*</span>
           </label>
           <input
             id="startTime"
@@ -147,7 +147,7 @@ export function EventForm({
             htmlFor="endTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            End Time (ET)
+            End Time (ET) <span className="text-red-500">*</span>
           </label>
           <input
             id="endTime"
@@ -170,7 +170,7 @@ export function EventForm({
       {/* Location Picker */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Event Location
+          Event Location <span className="text-red-500">*</span>
         </label>
         <LocationPicker
           address={formData.locationAddress}

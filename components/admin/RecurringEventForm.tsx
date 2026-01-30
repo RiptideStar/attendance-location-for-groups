@@ -120,7 +120,7 @@ export function RecurringEventForm({
           htmlFor="title"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Event Title
+          Event Title <span className="text-red-500">*</span>
         </label>
         <input
           id="title"
@@ -145,7 +145,7 @@ export function RecurringEventForm({
             htmlFor="startDate"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            First Event Date
+            First Event Date <span className="text-red-500">*</span>
           </label>
           <input
             id="startDate"
@@ -169,7 +169,7 @@ export function RecurringEventForm({
             htmlFor="startTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Start Time (ET)
+            Start Time (ET) <span className="text-red-500">*</span>
           </label>
           <input
             id="startTime"
@@ -193,7 +193,7 @@ export function RecurringEventForm({
             htmlFor="durationMinutes"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Duration (minutes)
+            Duration (minutes) <span className="text-red-500">*</span>
           </label>
           <input
             id="durationMinutes"
@@ -220,7 +220,7 @@ export function RecurringEventForm({
       {/* Recurrence Pattern */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Recurrence Pattern
+          Recurrence Pattern <span className="text-red-500">*</span>
         </label>
         <div className="space-y-4">
           {/* Recurrence Type */}
@@ -248,7 +248,7 @@ export function RecurringEventForm({
           {formData.recurrenceType === "weekly" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Repeat on
+                Repeat on <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {DAYS_OF_WEEK.map((day, index) => (
@@ -282,7 +282,7 @@ export function RecurringEventForm({
                 htmlFor="monthlyDate"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Day of Month
+                Day of Month <span className="text-red-500">*</span>
               </label>
               <input
                 id="monthlyDate"
@@ -320,7 +320,7 @@ export function RecurringEventForm({
                   htmlFor="monthlyWeek"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Week of Month
+                  Week of Month <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="monthlyWeek"
@@ -348,7 +348,7 @@ export function RecurringEventForm({
                   htmlFor="monthlyWeekday"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Day of Week
+                  Day of Week <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="monthlyWeekday"
@@ -388,7 +388,7 @@ export function RecurringEventForm({
               htmlFor="recurrenceInterval"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Repeat every
+              Repeat every <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -445,7 +445,7 @@ export function RecurringEventForm({
       {/* Location Picker */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Event Location
+          Event Location <span className="text-red-500">*</span>
         </label>
         <LocationPicker
           address={formData.locationAddress}

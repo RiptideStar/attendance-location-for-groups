@@ -77,7 +77,9 @@ export async function POST(
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create organization
-    const { data: organization, error: insertError } = await supabaseAdmin
+    const { data: organization, error: insertError } = await (
+      supabaseAdmin as any
+    )
       .from("organizations")
       .insert({
         username: username.toLowerCase().trim(),

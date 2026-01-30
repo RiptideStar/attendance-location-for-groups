@@ -7,6 +7,7 @@ import {
   generateEventInstances,
   validateRecurringEvent,
 } from "@/lib/utils/recurring-events";
+import { upsertOrganizationLocation } from "@/lib/locations/save-location";
 
 // GET /api/recurring-events - Get all recurring events for authenticated organization
 export async function GET() {
@@ -37,9 +38,13 @@ export async function GET() {
     }
 
     // Transform the data to include event count
+    // Supabase's (count) aggregate returns [{ count: N }], so read the value directly
     const recurringEventsWithCount = recurringEvents.map((re: any) => ({
       ...re,
-      event_count: Array.isArray(re.events) ? re.events.length : 0,
+      event_count:
+        Array.isArray(re.events) && re.events.length > 0
+          ? re.events[0].count
+          : 0,
     }));
 
     return NextResponse.json(recurringEventsWithCount);
@@ -144,6 +149,14 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Auto-save location for future reuse (fire-and-forget)
+    upsertOrganizationLocation(
+      session.user.organizationId,
+      body.location_address,
+      body.location_lat,
+      body.location_lng
+    );
 
     return NextResponse.json(
       {

@@ -61,6 +61,7 @@ export function generateEventInstances(
         recurringEvent.registration_window_after_minutes,
       location_radius_meters: recurringEvent.location_radius_meters,
       recurring_event_id: recurringEvent.id,
+      organization_id: recurringEvent.organization_id,
     });
 
     currentDate = new Date(eventDate);

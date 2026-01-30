@@ -130,6 +130,47 @@ export interface Database {
           created_at?: string;
         };
       };
+      organization_locations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          label: string;
+          address: string;
+          lat: number;
+          lng: number;
+          is_favorite: boolean;
+          last_used_at: string;
+          use_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          label: string;
+          address: string;
+          lat: number;
+          lng: number;
+          is_favorite?: boolean;
+          last_used_at?: string;
+          use_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          label?: string;
+          address?: string;
+          lat?: number;
+          lng?: number;
+          is_favorite?: boolean;
+          last_used_at?: string;
+          use_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       recurring_events: {
         Row: {
           id: string;
@@ -203,7 +244,18 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      upsert_organization_location: {
+        Args: {
+          p_organization_id: string;
+          p_label: string;
+          p_address: string;
+          p_lat: number;
+          p_lng: number;
+        };
+        Returns: void;
+      };
+    };
     Enums: Record<string, never>;
   };
 }
