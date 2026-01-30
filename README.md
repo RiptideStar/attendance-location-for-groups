@@ -2,6 +2,14 @@
 
 Location-based QR code attendance system for general club/classes. Built with Next.js 16, Supabase, and deployed on Vercel.
 
+## Current Maintainers
+
+Maintainers rotate as students and contributors change. This section is updated regularly—reach out if you need help, or open a PR to add yourself.
+
+- Kyle Zhang — [kyle100@wharton.upenn.edu](mailto:kyle100@wharton.upenn.edu)
+
+[![Maintainer: Kyle Zhang](https://img.shields.io/badge/Maintainer-Kyle%20Zhang-1D4ED8?style=for-the-badge)](mailto:kyle100@wharton.upenn.edu)
+
 ## Features
 
 - **QR Code Check-In**: Generate unique QR codes for each event
