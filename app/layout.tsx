@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
-  title: "Penn CBC Attendance",
-  description: "Location-based QR code attendance system for Penn Claude Builders Club events",
+  title: "Attendance Location for Groups",
+  description: "Location-based QR code attendance system for clubs and classes.",
 };
 
 export default function RootLayout({
