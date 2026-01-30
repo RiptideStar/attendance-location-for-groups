@@ -12,6 +12,7 @@ Location-based QR code attendance system for Penn Claude Builders Club events. B
 - **Search & Filter**: Search attendees by name or email across all events
 - **Countdown Timer**: Shows countdown before registration opens
 - **Mobile-Responsive**: Optimized for mobile devices (primary use case)
+ - **Credits Section**: Home screen shows contributors across Claude Builders Clubs
 
 ## Tech Stack
 
@@ -196,9 +197,19 @@ Change in `.env.local` or directly in [app/api/auth/[...nextauth]/route.ts](app/
 - Ensure schema.sql has been run in Supabase SQL Editor
 - Check RLS policies are enabled
 
+## Contributing
+
+Contributions are welcome. Please:
+- Open an issue to discuss significant changes
+- Submit focused pull requests with clear descriptions
+- Follow existing code style and TypeScript strictness
+- Do not include secrets or production keys in commits
+
+Add yourself to Credits by editing [lib/contributors.ts](lib/contributors.ts) with your club/name, affiliation, and link. The list renders on the home screen.
+
 ## License
 
-MIT
+AGPL-3.0-or-later. See [LICENSE](LICENSE).
 
 ## Support
 

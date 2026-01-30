@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
         body.registration_window_after_minutes || 30,
       location_radius_meters: body.location_radius_meters || 50,
       organization_id: session.user.organizationId,
+      timezone: body.timezone || "America/New_York",
     };
 
     // Validate the recurring event

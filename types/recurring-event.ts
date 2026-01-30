@@ -44,6 +44,7 @@ export interface RecurringEventFormData {
   // For monthly weekday recurrence
   recurrenceMonthlyWeek: number | null; // 1-5
   recurrenceMonthlyWeekday: number | null; // 0-6
+  timezone: string; // IANA timezone string (e.g., "America/New_York")
 }
 
 // Recurring event with generated event count

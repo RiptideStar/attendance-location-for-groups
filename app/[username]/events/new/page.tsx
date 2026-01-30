@@ -32,6 +32,7 @@ export default function NewEventPage() {
           location_address: data.locationAddress,
           location_lat: data.locationLat,
           location_lng: data.locationLng,
+          timezone: data.timezone,
         }),
       });
 

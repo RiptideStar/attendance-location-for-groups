@@ -54,6 +54,7 @@ export interface Database {
           is_closed: boolean;
           recurring_event_id: string | null;
           organization_id: string;
+          timezone: string;
           created_at: string;
           updated_at: string;
         };
@@ -71,6 +72,7 @@ export interface Database {
           is_closed?: boolean;
           recurring_event_id?: string | null;
           organization_id: string;
+          timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -88,6 +90,7 @@ export interface Database {
           is_closed?: boolean;
           recurring_event_id?: string | null;
           organization_id?: string;
+          timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -192,6 +195,7 @@ export interface Database {
           registration_window_after_minutes: number;
           location_radius_meters: number;
           organization_id: string;
+          timezone: string;
           created_at: string;
           updated_at: string;
         };
@@ -215,6 +219,7 @@ export interface Database {
           registration_window_after_minutes?: number;
           location_radius_meters?: number;
           organization_id: string;
+          timezone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -238,6 +243,7 @@ export interface Database {
           registration_window_after_minutes?: number;
           location_radius_meters?: number;
           organization_id?: string;
+          timezone?: string;
           created_at?: string;
           updated_at?: string;
         };

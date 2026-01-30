@@ -1,5 +1,6 @@
 import type { RecurringEvent } from "@/types/recurring-event";
 import type { EventInsert } from "@/types/event";
+import { zonedTimeToUtc } from "date-fns-tz";
 
 /**
  * Generates individual event instances from a recurring event pattern
@@ -39,13 +40,21 @@ export function generateEventInstances(
       break;
     }
 
-    // Set the time of day for the event
-    const eventStartTime = new Date(eventDate);
-    eventStartTime.setHours(hours, minutes, 0, 0);
+    // Build a datetime string in the event's timezone and convert to UTC
+    const yyyy = String(eventDate.getUTCFullYear());
+    const mm = String(eventDate.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(eventDate.getUTCDate()).padStart(2, "0");
+    const HH = String(hours).padStart(2, "0");
+    const MM = String(minutes).padStart(2, "0");
+    const localDateTime = `${yyyy}-${mm}-${dd}T${HH}:${MM}:00`;
 
-    const eventEndTime = new Date(eventStartTime);
-    eventEndTime.setMinutes(
-      eventEndTime.getMinutes() + recurringEvent.duration_minutes
+    const eventStartTime = zonedTimeToUtc(
+      localDateTime,
+      (recurringEvent as any).timezone || "America/New_York"
+    );
+
+    const eventEndTime = new Date(
+      eventStartTime.getTime() + recurringEvent.duration_minutes * 60 * 1000
     );
 
     events.push({
@@ -62,6 +71,7 @@ export function generateEventInstances(
       location_radius_meters: recurringEvent.location_radius_meters,
       recurring_event_id: recurringEvent.id,
       organization_id: recurringEvent.organization_id,
+      timezone: (recurringEvent as any).timezone || "America/New_York",
     });
 
     currentDate = new Date(eventDate);

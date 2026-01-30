@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { utcToLocalInput } from "@/lib/utils/date-helpers";
+import { utcToLocalInput, getBrowserTimezone, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 import type { Event, EventFormData } from "@/types/event";
 
 const LocationPicker = dynamic(
@@ -23,6 +23,9 @@ export function EventForm({
   mode,
   loading = false,
 }: EventFormProps) {
+  const browserTimezone = getBrowserTimezone();
+  const tzAbbrev = getTimezoneAbbreviation(browserTimezone);
+
   const [formData, setFormData] = useState<EventFormData>({
     title: initialData?.title || "",
     startTime: initialData?.start_time
@@ -32,6 +35,7 @@ export function EventForm({
     locationAddress: initialData?.location_address || "",
     locationLat: initialData?.location_lat || 39.9526, // Default to Philly
     locationLng: initialData?.location_lng || -75.1652,
+    timezone: browserTimezone,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -123,7 +127,7 @@ export function EventForm({
             htmlFor="startTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Start Time (ET) <span className="text-red-500">*</span>
+            Start Time ({tzAbbrev}) <span className="text-red-500">*</span>
           </label>
           <input
             id="startTime"
@@ -147,7 +151,7 @@ export function EventForm({
             htmlFor="endTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            End Time (ET) <span className="text-red-500">*</span>
+            End Time ({tzAbbrev}) <span className="text-red-500">*</span>
           </label>
           <input
             id="endTime"
@@ -165,6 +169,7 @@ export function EventForm({
             <p className="text-red-600 text-sm mt-1">{errors.endTime}</p>
           )}
         </div>
+
       </div>
 
       {/* Location Picker */}

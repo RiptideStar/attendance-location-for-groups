@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { CountdownTimer } from "@/components/event/CountdownTimer";
 import { LocationVerification } from "@/components/event/LocationVerification";
 import { CheckInForm } from "@/components/event/CheckInForm";
-import { formatDateET, getTimeUntilRegistration, getRegistrationStatus } from "@/lib/utils/date-helpers";
+import { formatDate, getTimeUntilRegistration, getRegistrationStatus, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 import { hasAttendedClient } from "@/lib/cookies/attendance-cookie";
 import type { Event } from "@/types/event";
 import type { CheckInFormData, CheckInResponse } from "@/types/attendance";
@@ -164,8 +164,7 @@ export default function EventCheckInPage() {
                 {event.title}
               </h1>
               <p className="text-gray-600">
-                {formatDateET(event.start_time)} -{" "}
-                {formatDateET(event.end_time, { timeStyle: "short" })}
+                {formatDate(event.start_time, { dateStyle: "medium", timeStyle: "short" }, event.timezone)} - {formatDate(event.end_time, { timeStyle: "short" }, event.timezone)} ({getTimezoneAbbreviation(event.timezone)})
               </p>
               <p className="text-gray-600 mt-1">{event.location_address}</p>
             </div>

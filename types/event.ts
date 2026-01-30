@@ -18,6 +18,7 @@ export interface EventFormData {
   locationAddress: string;
   locationLat: number;
   locationLng: number;
+  timezone: string; // IANA timezone string (e.g., "America/New_York")
 }
 
 // Event registration window status

@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       location_address,
       location_lat,
       location_lng,
+      timezone,
     } = body;
 
     if (
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
       location_address,
       location_lat,
       location_lng,
+      timezone: timezone || "America/New_York",
       registration_window_before_minutes:
         body.registration_window_before_minutes || 30,
       registration_window_after_minutes:

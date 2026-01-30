@@ -89,6 +89,7 @@ export async function PUT(
     if (body.location_radius_meters !== undefined)
       updateData.location_radius_meters = body.location_radius_meters;
     if (body.is_closed !== undefined) updateData.is_closed = body.is_closed;
+    if (body.timezone !== undefined) updateData.timezone = body.timezone;
 
     // Validate time range if both times are being updated
     if (updateData.start_time && updateData.end_time) {

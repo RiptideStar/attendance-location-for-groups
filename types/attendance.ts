@@ -9,6 +9,7 @@ export interface AttendeeWithEvent extends Attendee {
   event_title: string;
   event_start_time: string;
   event_location: string;
+  event_timezone: string | null;
 }
 
 // Check-in form data

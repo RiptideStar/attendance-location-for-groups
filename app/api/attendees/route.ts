@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
     const searchTerm = searchParams.get("search");
 
     // Build query with organization filter
+    // Note: Avoid selecting events.timezone to remain compatible with databases
+    // that haven't applied the timezone migration yet. The client will fall back
+    // to browser timezone when event timezone is unavailable.
     let query = (supabaseAdmin as any)
       .from("attendees")
       .select(
@@ -72,6 +75,8 @@ export async function GET(request: NextRequest) {
       event_title: attendee.events?.title || "Unknown Event",
       event_start_time: attendee.events?.start_time || null,
       event_location: attendee.events?.location_address || "Unknown Location",
+      // May be null if the timezone migration hasn't been applied yet
+      event_timezone: (attendee.events as any)?.timezone ?? null,
     }));
 
     return NextResponse.json(transformedAttendees);

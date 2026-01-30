@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { QRCodeDisplay } from "@/components/admin/QRCodeDisplay";
-import { formatDateET, getRegistrationStatus } from "@/lib/utils/date-helpers";
+import { formatDate, getRegistrationStatus, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 import type { EventWithCount } from "@/types/event";
 
 export default function AdminDashboard() {
@@ -199,8 +199,7 @@ export default function AdminDashboard() {
                           </h3>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm text-gray-600">
-                              {formatDateET(event.start_time)} -{" "}
-                              {formatDateET(event.end_time, { timeStyle: "short" })}
+                              {formatDate(event.start_time, { dateStyle: "medium", timeStyle: "short" }, event.timezone)} - {formatDate(event.end_time, { timeStyle: "short" }, event.timezone)} ({getTimezoneAbbreviation(event.timezone)})
                             </span>
                           </div>
                           <p className="text-sm text-gray-600">

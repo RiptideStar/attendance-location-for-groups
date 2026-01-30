@@ -1,13 +1,63 @@
 // Date and timezone utility functions
-// All dates are stored in UTC in the database and converted to ET for display
+// All dates are stored in UTC in the database and converted to the event's timezone for display
 
-const ET_TIMEZONE = "America/New_York";
+const FALLBACK_TIMEZONE = "America/New_York";
 
 /**
- * Convert a UTC date to ET timezone and format for display
+ * Get the browser's IANA timezone string (e.g., "America/New_York", "America/Los_Angeles")
+ * Falls back to "America/New_York" if detection fails.
+ */
+export function getBrowserTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return FALLBACK_TIMEZONE;
+  }
+}
+
+/**
+ * Get a short timezone abbreviation for display (e.g., "ET", "CT", "PT")
+ * @param timezone IANA timezone string
+ * @returns Short abbreviation string
+ */
+export function getTimezoneAbbreviation(timezone: string): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const tzPart = parts.find((p) => p.type === "timeZoneName");
+    return tzPart?.value || timezone;
+  } catch {
+    return timezone;
+  }
+}
+
+/**
+ * Convert a UTC date to a specific timezone and format for display
  * @param utcDate Date in UTC
  * @param options Formatting options
- * @returns Formatted date string in ET
+ * @param timezone IANA timezone string (e.g., "America/New_York")
+ * @returns Formatted date string in the specified timezone
+ */
+export function formatDate(
+  utcDate: Date | string,
+  options: Intl.DateTimeFormatOptions = {
+    dateStyle: "medium",
+    timeStyle: "short",
+  },
+  timezone: string = FALLBACK_TIMEZONE
+): string {
+  const date = typeof utcDate === "string" ? new Date(utcDate) : utcDate;
+  return date.toLocaleString("en-US", {
+    ...options,
+    timeZone: timezone,
+  });
+}
+
+/**
+ * @deprecated Use formatDate() with an explicit timezone parameter instead
  */
 export function formatDateET(
   utcDate: Date | string,
@@ -16,15 +66,11 @@ export function formatDateET(
     timeStyle: "short",
   }
 ): string {
-  const date = typeof utcDate === "string" ? new Date(utcDate) : utcDate;
-  return date.toLocaleString("en-US", {
-    ...options,
-    timeZone: ET_TIMEZONE,
-  });
+  return formatDate(utcDate, options, FALLBACK_TIMEZONE);
 }
 
 /**
- * Get current date/time in ET timezone
+ * Get current date/time
  * @returns Current date
  */
 export function getCurrentDateET(): Date {
@@ -33,43 +79,33 @@ export function getCurrentDateET(): Date {
 
 /**
  * Convert datetime-local input (browser local time) to UTC for database storage
- * The datetime-local input is assumed to be in ET timezone
+ * The datetime-local input uses the browser's local timezone
  * @param localDatetimeString datetime-local string (e.g., "2024-01-29T14:30")
  * @returns Date object in UTC
  */
 export function localToUTC(localDatetimeString: string): Date {
-  // The datetime-local input is in local time (ET for our users)
-  // We need to parse it as ET and convert to UTC
+  // new Date() parses datetime-local strings as local time and stores internally as UTC
   const date = new Date(localDatetimeString);
   return date;
 }
 
 /**
  * Convert UTC date to datetime-local format for form inputs
+ * Uses the browser's local timezone so the input matches what the admin sees
  * @param utcDate Date in UTC
  * @returns datetime-local string (YYYY-MM-DDTHH:mm)
  */
 export function utcToLocalInput(utcDate: Date | string): string {
   const date = typeof utcDate === "string" ? new Date(utcDate) : utcDate;
 
-  // Convert to ET timezone for editing
-  const etString = date.toLocaleString("en-US", {
-    timeZone: ET_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  // Use the browser's local timezone via Date local methods
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
 
-  // Parse the formatted string and convert to datetime-local format
-  // Expected format: "MM/DD/YYYY, HH:mm"
-  const [datePart, timePart] = etString.split(", ");
-  const [month, day, year] = datePart.split("/");
-  const [hour, minute] = timePart.split(":");
-
-  return `${year}-${month}-${day}T${hour}:${minute}`;
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 /**

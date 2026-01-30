@@ -263,7 +263,7 @@ export function LocationPicker({
       {/* Map with Search Overlay */}
       <div className="relative rounded-lg overflow-hidden border border-gray-300">
         {/* Search overlay on top of map */}
-        <div className="absolute top-3 left-3 right-3 z-[1000]">
+        <div className="absolute top-3 left-14 right-3 z-[1000]">
           <div className="relative">
             <input
               id="address-search"
@@ -327,17 +327,17 @@ export function LocationPicker({
         </MapContainer>
       </div>
 
-      {/* Selected Address Display */}
+      {/* Display Address */}
       <div className="space-y-2">
         <div>
           <label
-            htmlFor="selected-address"
+            htmlFor="display-address"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Selected Address
+            Display Address
           </label>
           <input
-            id="selected-address"
+            id="display-address"
             type="text"
             value={address}
             onChange={(e) => onChange(e.target.value, lat, lng)}

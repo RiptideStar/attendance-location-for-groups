@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { RecurringEventFormData } from "@/types/recurring-event";
 import { DAYS_OF_WEEK, WEEK_ORDINALS } from "@/types/recurring-event";
+import { getBrowserTimezone, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 
 const LocationPicker = dynamic(
   () =>
@@ -20,6 +21,8 @@ export function RecurringEventForm({
   onSubmit,
   loading = false,
 }: RecurringEventFormProps) {
+  const browserTimezone = getBrowserTimezone();
+  const tzAbbrev = getTimezoneAbbreviation(browserTimezone);
   const [formData, setFormData] = useState<RecurringEventFormData>({
     title: "",
     startDate: "",
@@ -35,6 +38,7 @@ export function RecurringEventForm({
     recurrenceMonthlyDate: null,
     recurrenceMonthlyWeek: null,
     recurrenceMonthlyWeekday: null,
+    timezone: browserTimezone,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -169,7 +173,7 @@ export function RecurringEventForm({
             htmlFor="startTime"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Start Time (ET) <span className="text-red-500">*</span>
+            Start Time ({tzAbbrev}) <span className="text-red-500">*</span>
           </label>
           <input
             id="startTime"
@@ -215,6 +219,7 @@ export function RecurringEventForm({
             <p className="text-red-600 text-sm mt-1">{errors.durationMinutes}</p>
           )}
         </div>
+
       </div>
 
       {/* Recurrence Pattern */}

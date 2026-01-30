@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { formatDateET } from "@/lib/utils/date-helpers";
+import { formatDate, getBrowserTimezone } from "@/lib/utils/date-helpers";
 import type { AttendeeWithEvent } from "@/types/attendance";
 
 interface AttendeeTableProps {
@@ -15,6 +15,7 @@ export function AttendeeTable({
 }: AttendeeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [eventFilter, setEventFilter] = useState<string>("all");
+  const browserTimezone = getBrowserTimezone();
 
   // Get unique events for filter dropdown
   const events = useMemo(() => {
@@ -118,20 +119,14 @@ export function AttendeeTable({
                       <div className="font-medium">{attendee.event_title}</div>
                       {attendee.event_start_time && (
                         <div className="text-xs text-gray-500">
-                          {formatDateET(attendee.event_start_time, {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
+                          {formatDate(attendee.event_start_time, { dateStyle: "short", timeStyle: "short" }, attendee.event_timezone || browserTimezone)}
                         </div>
                       )}
                     </div>
                   </td>
                 )}
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  {formatDateET(attendee.check_in_time, {
-                    dateStyle: "short",
-                    timeStyle: "short",
-                  })}
+                  {formatDate(attendee.check_in_time, { dateStyle: "short", timeStyle: "short" }, browserTimezone)}
                 </td>
               </tr>
             ))}

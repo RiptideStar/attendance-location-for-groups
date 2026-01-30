@@ -38,6 +38,7 @@ export default function NewRecurringEventPage() {
           location_address: data.locationAddress,
           location_lat: data.locationLat,
           location_lng: data.locationLng,
+          timezone: data.timezone,
           recurrence_type: data.recurrenceType,
           recurrence_interval: data.recurrenceInterval,
           recurrence_days:
