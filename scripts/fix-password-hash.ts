@@ -13,32 +13,32 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 async function fixPasswordHash() {
-  console.log("Fixing password hash for penncbc organization...\n");
+  const orgUsername = process.env.ORG_USERNAME;
+  const newPassword = process.env.NEW_PASSWORD;
+
+  if (!orgUsername || !newPassword) {
+    console.error("ERROR: Missing ORG_USERNAME or NEW_PASSWORD env variables");
+    console.error("Usage: ORG_USERNAME=yourorg NEW_PASSWORD=strongpass npm run fix-password-hash");
+    process.exit(1);
+  }
+
+  console.log(`Rotating password for organization: ${orgUsername}\n`);
 
   try {
-    // Generate proper password hash
-    const defaultPassword = "penncbc123";
-    const passwordHash = await bcrypt.hash(defaultPassword, 10);
-    console.log(`Generated password hash for: "${defaultPassword}"`);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
 
-    // Update the organization
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("organizations")
       .update({ password_hash: passwordHash })
-      .eq("username", "penncbc")
-      .select();
+      .eq("username", orgUsername);
 
     if (error) {
       console.error("Error updating password hash:", error);
       process.exit(1);
     }
 
-    console.log("\n✅ Password hash updated successfully!");
-    console.log("\nYou can now log in with:");
-    console.log("  Username: penncbc");
-    console.log("  Password: penncbc123");
-    console.log("  URL: http://localhost:3000/login\n");
-
+    console.log("✅ Password rotated successfully.");
+    console.log("Note: Do not share passwords in logs. Distribute the new password securely.");
   } catch (error) {
     console.error("\n❌ Failed to update password hash:", error);
     process.exit(1);
