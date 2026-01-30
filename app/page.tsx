@@ -22,15 +22,17 @@ export default function HomePage() {
           >
             Register New Organization
           </Link>
+        </div>
+        <p className="mt-2 text-xs text-gray-400">
           <a
             href="https://github.com/RiptideStar/attendance-location-for-groups"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+            className="underline hover:text-gray-600"
           >
             Contribute on GitHub
           </a>
-        </div>
+        </p>
         <p className="mt-12 text-xs text-gray-400 inline-flex items-center justify-center gap-1 flex-wrap">
           <span>Community-built with</span>
           <a href="https://claude.com/product/claude-code" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Claude Code</a>
@@ -39,7 +41,7 @@ export default function HomePage() {
           </svg>
           <span>started at</span>
           <a href="https://penncbc.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">UPenn Claude Builders Club</a>
-          <span>, now maintained by builders across universities</span>
+          {/* <span>, now maintained by builders across universities</span> */}
         </p>
 
         {/* Credits */}
