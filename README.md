@@ -1,6 +1,6 @@
-# Penn CBC Attendance System
+# Attendance Location for Groups
 
-Location-based QR code attendance system for Penn Claude Builders Club events. Built with Next.js 16, Supabase, and deployed on Vercel.
+Location-based QR code attendance system for general club/classes. Built with Next.js 16, Supabase, and deployed on Vercel.
 
 ## Features
 
@@ -18,10 +18,10 @@ Location-based QR code attendance system for Penn Claude Builders Club events. B
 
 - **Framework**: Next.js 16+ (App Router) with TypeScript
 - **Database**: Supabase (PostgreSQL)
-- **Auth**: NextAuth.js with hardcoded credentials
+- **Auth**: NextAuth.js (Credentials) with multi-tenant organizations and JWT sessions
 - **Styling**: Tailwind CSS
 - **QR Codes**: qrcode.react
-- **Maps**: Google Maps API (for admin location picker)
+- **Maps**: Leaflet + OpenStreetMap (leaflet, react-leaflet, leaflet-geosearch)
 - **Deployment**: Vercel
 
 ## Getting Started
@@ -45,17 +45,7 @@ npm install
 2. Go to SQL Editor and run the schema from [supabase/schema.sql](supabase/schema.sql)
 3. Get your Supabase URL and keys from Project Settings > API
 
-### 4. Get Google Maps API Key (Optional)
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a new project or select existing
-3. Enable these APIs:
-   - Maps JavaScript API
-   - Places API
-   - Geocoding API
-4. Create an API key and restrict it to your domain
-
-### 5. Configure Environment Variables
+### 4. Configure Environment Variables
 
 Copy [.env.example](.env.example) to `.env.local` and fill in your values:
 
@@ -78,15 +68,41 @@ NEXTAUTH_SECRET=your-secret-here  # Generate with: openssl rand -base64 32
 # App
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-# Google Maps
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-
-# Admin Credentials
-ADMIN_USERNAME=penncbc
-ADMIN_PASSWORD=penncbc123
+# Note: No Google Maps key needed (Leaflet + OSM)
 ```
 
-### 6. Run Development Server
+### 5. Run Multi-Tenant Migration
+
+This app supports multiple organizations (clubs). Run the migration to create the `organizations` table, seed a default org, and add org IDs to events/attendees.
+
+Requirements:
+- Ensure these env vars are set in `.env.local`: `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+
+Run:
+
+```bash
+npm run migrate
+```
+
+If you see a message that direct SQL execution is unavailable, the script will write a ready-to-run SQL file at:
+
+- [supabase/migrations/002_add_multi_tenant_support_ready.sql](supabase/migrations/002_add_multi_tenant_support_ready.sql)
+
+Open your Supabase SQL Editor, paste the contents of that file, and execute it.
+
+Default admin credentials (after migration):
+- Username: `penncbc`
+- Password: `penncbc123`
+
+### 6. Add Event Timezone Column
+
+Run the timezone migration so events store their IANA timezone:
+
+- Execute [supabase/migrations/004_add_event_timezone.sql](supabase/migrations/004_add_event_timezone.sql) in the Supabase SQL Editor.
+
+Note: If you haven't applied this migration yet, the app falls back to the viewer's browser timezone.
+
+### 7. Run Development Server
 
 ```bash
 npm run dev
@@ -98,12 +114,12 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### Admin Portal
 
-1. Navigate to `/admin`
-2. Login with credentials: `penncbc` / `penncbc123`
+1. Go to `/login` and sign in with: `penncbc` / `penncbc123`
+2. After login, you'll be redirected to your organization routes under `/:username`, e.g. `/penncbc/dashboard`
 3. Create a new event:
    - Enter event title
    - Set start and end times (ET timezone)
-   - Select location using Google Maps or manual coordinates
+   - Pick a location on the map (Leaflet + OpenStreetMap) or enter coordinates
 4. Download the generated QR code
 5. Share QR code for your event
 
@@ -118,20 +134,22 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### View Attendees
 
-- **Per Event**: Click "View Attendees" on an event in the admin dashboard
-- **Global Search**: Go to "All Attendees" tab to search across all events
+- Per Event: Click "View Attendees" on an event in the dashboard
+- Global Search: `/:username/attendees` (e.g. `/penncbc/attendees`) shows all attendees across events
 
 ## Project Structure
 
 ```
 ├── app/
-│   ├── admin/                 # Admin portal pages
-│   ├── api/                   # API routes
+│   ├── [username]/            # Multi-tenant org routes (dashboard, events, attendees)
+│   ├── admin/                 # Legacy routes (redirected by middleware)
+│   ├── api/                   # API routes (server-side, service role)
 │   │   ├── attendance/        # Check-in API
-│   │   ├── attendees/         # Attendee search API
+│   │   ├── attendees/         # Attendee search API (org-scoped)
 │   │   ├── auth/              # NextAuth
-│   │   └── events/            # Event CRUD API
-│   └── event/[eventId]/       # Public check-in page
+│   │   └── events/            # Event CRUD API (org-scoped)
+│   ├── event/[eventId]/       # Public check-in page
+│   └── login/                 # Admin login page
 ├── components/
 │   ├── admin/                 # Admin components
 │   └── event/                 # Public check-in components
@@ -141,16 +159,23 @@ Open [http://localhost:3000](http://localhost:3000)
 │   ├── supabase/              # Supabase clients
 │   └── utils/                 # Helper functions
 ├── supabase/
-│   └── schema.sql             # Database schema
+│   ├── schema.sql             # Base database schema
+│   └── migrations/            # Incremental migrations
+│       ├── 002_add_multi_tenant_support.sql
+│       └── 004_add_event_timezone.sql
 └── types/                     # TypeScript type definitions
 ```
 
 ## Key Files
 
-- [supabase/schema.sql](supabase/schema.sql) - Database schema
+- [supabase/schema.sql](supabase/schema.sql) - Base database schema
+- [supabase/migrations/002_add_multi_tenant_support.sql](supabase/migrations/002_add_multi_tenant_support.sql) - Multi-tenant migration (script will produce a ready version)
+- [supabase/migrations/004_add_event_timezone.sql](supabase/migrations/004_add_event_timezone.sql) - Event timezone column
+- [middleware.ts](middleware.ts) - Org route protection and redirects
 - [app/api/attendance/route.ts](app/api/attendance/route.ts) - Check-in API with validations
+- [app/api/attendees/route.ts](app/api/attendees/route.ts) - Organization-scoped attendee API
 - [app/event/[eventId]/page.tsx](app/event/[eventId]/page.tsx) - Public check-in flow
-- [app/admin/page.tsx](app/admin/page.tsx) - Admin dashboard
+- [components/admin/AttendeeTable.tsx](components/admin/AttendeeTable.tsx) - Admin attendee table and filters
 - [lib/geolocation/verification.ts](lib/geolocation/verification.ts) - Haversine distance calculation
 
 ## Deployment to Vercel
@@ -159,6 +184,7 @@ Open [http://localhost:3000](http://localhost:3000)
 2. Import your repository in Vercel
 3. Add environment variables in Vercel dashboard:
    - Add all variables from `.env.local`
+   - Keep `SUPABASE_SERVICE_ROLE_KEY` in Server-side env only (never exposed to browser)
    - Set `NEXT_PUBLIC_BASE_URL` to your production domain
 4. Deploy!
 
@@ -196,6 +222,20 @@ Change in `.env.local` or directly in [app/api/auth/[...nextauth]/route.ts](app/
 - Verify Supabase credentials in `.env.local`
 - Ensure schema.sql has been run in Supabase SQL Editor
 - Check RLS policies are enabled
+
+### “All Attendees” shows “Failed to fetch attendees”
+
+- Ensure you are signed in (401 responses are surfaced as fetch errors)
+- Apply the multi-tenant migration and the timezone migration:
+   - [supabase/migrations/002_add_multi_tenant_support.sql](supabase/migrations/002_add_multi_tenant_support.sql)
+   - [supabase/migrations/004_add_event_timezone.sql](supabase/migrations/004_add_event_timezone.sql)
+- The API now gracefully handles missing timezone by falling back to the browser timezone, but applying the migration is recommended
+
+### `npm run migrate` fails with code 127
+
+- Run `npm install` to ensure dev dependencies (including `tsx`) are installed
+- Make sure you are using a recent Node.js (v18+)
+- Verify `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set
 
 ## Contributing
 
