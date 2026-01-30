@@ -73,7 +73,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 ### 5. Run Multi-Tenant Migration
 
-This app supports multiple organizations (clubs). Run the migration to create the `organizations` table, seed a default org, and add org IDs to events/attendees.
+This app supports multiple organizations (clubs). Run the migration to create the `organizations` table and add org IDs to events/attendees. The migration may also seed an initial sample organization for development.
 
 Requirements:
 - Ensure these env vars are set in `.env.local`: `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
@@ -90,9 +90,7 @@ If you see a message that direct SQL execution is unavailable, the script will w
 
 Open your Supabase SQL Editor, paste the contents of that file, and execute it.
 
-Default admin credentials (after migration):
-- Username: `penncbc`
-- Password: `penncbc123`
+
 
 ### 6. Add Event Timezone Column
 
@@ -114,8 +112,8 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ### Admin Portal
 
-1. Go to `/login` and sign in with: `penncbc` / `penncbc123`
-2. After login, you'll be redirected to your organization routes under `/:username`, e.g. `/penncbc/dashboard`
+1. If you don't have an organization yet, go to `/register` to create one.
+2. Then go to `/login` and sign in with the credentials you created. You'll be redirected to your organization routes under `/:username`, e.g. `/yourorg/dashboard`.
 3. Create a new event:
    - Enter event title
    - Set start and end times (ET timezone)
@@ -200,7 +198,7 @@ Default: 50 meters. Modify per-event in the database.
 
 ### Admin Credentials
 
-Change in `.env.local` or directly in [app/api/auth/[...nextauth]/route.ts](app/api/auth/[...nextauth]/route.ts)
+Credentials are stored in the `organizations` table in Supabase and are managed by the app (registration and login). Use the Register page to create an organization. To rotate or reset a password, update it securely via your own admin flow or directly in the database.
 
 ## Troubleshooting
 

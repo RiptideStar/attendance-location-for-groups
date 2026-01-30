@@ -22,17 +22,27 @@ export default function HomePage() {
           >
             Register New Organization
           </Link>
-        </div>
-        <p className="mt-2 text-xs text-gray-400">
           <a
             href="https://github.com/RiptideStar/attendance-location-for-groups"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-gray-600"
+            className="inline-flex items-center justify-center gap-1.5 text-gray-600 px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-sm"
+            aria-label="Contribute on GitHub"
           >
-            Contribute on GitHub
+            {/* GitHub icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path fillRule="evenodd" d="M12 2C6.477 2 2 6.486 2 12.021c0 4.43 2.865 8.185 6.839 9.504.5.091.682-.217.682-.483 0-.238-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.455-1.157-1.11-1.466-1.11-1.466-.908-.62.069-.607.069-.607 1.004.071 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.833.091-.647.35-1.088.636-1.339-2.221-.253-4.556-1.114-4.556-4.957 0-1.095.39-1.99 1.029-2.69-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.027A9.564 9.564 0 0 1 12 7.5c.85.004 1.705.115 2.504.337 1.909-1.297 2.748-1.027 2.748-1.027.546 1.378.202 2.397.099 2.65.64.7 1.028 1.595 1.028 2.69 0 3.852-2.339 4.701-4.566 4.949.36.31.68.92.68 1.854 0 1.338-.012 2.418-.012 2.747 0 .268.18.58.688.481A9.525 9.525 0 0 0 22 12.02C22 6.486 17.523 2 12 2Z" clipRule="evenodd" />
+            </svg>
+            <span>Contribute on GitHub</span>
           </a>
-        </p>
+        </div>
+        
         <p className="mt-12 text-xs text-gray-400 inline-flex items-center justify-center gap-1 flex-wrap">
           <span>Community-built with</span>
           <a href="https://claude.com/product/claude-code" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Claude Code</a>
