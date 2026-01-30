@@ -8,6 +8,7 @@ import L from "leaflet";
 import type { SavedLocation } from "@/types/location";
 
 // Fix for default marker icons in Next.js
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -42,7 +43,7 @@ export function LocationPicker({
   onChange,
 }: LocationPickerProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<{ x: number; y: number; label: string }[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([
@@ -121,7 +122,7 @@ export function LocationPicker({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const handleSelectResult = (result: any) => {
+  const handleSelectResult = (result: { x: number; y: number; label: string }) => {
     const newLat = result.y;
     const newLng = result.x;
     const newAddress = result.label;

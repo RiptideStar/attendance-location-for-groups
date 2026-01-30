@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: events, error } = await (supabaseAdmin as any)
+    const { data: events, error } = await supabaseAdmin
       .from("events")
       .select(
         `
@@ -35,7 +35,7 @@ export async function GET() {
 
     // Transform the data to include attendee count
     // Supabase's (count) aggregate returns [{ count: N }], so read the value directly
-    const eventsWithCount = events.map((event: any) => ({
+    const eventsWithCount = events.map((event: Record<string, unknown> & { attendees?: { count: number }[] }) => ({
       ...event,
       attendee_count:
         Array.isArray(event.attendees) && event.attendees.length > 0
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       organization_id: session.user.organizationId,
     };
 
-    const { data: event, error } = await (supabaseAdmin as any)
+    const { data: event, error } = await supabaseAdmin
       .from("events")
       .insert(eventData)
       .select()

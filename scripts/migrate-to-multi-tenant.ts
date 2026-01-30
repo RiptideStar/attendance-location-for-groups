@@ -37,7 +37,7 @@ async function runMigration() {
       process.exit(1);
     }
 
-    let migrationSQL = fs.readFileSync(migrationPath, "utf-8");
+    const migrationSQL = fs.readFileSync(migrationPath, "utf-8");
     console.log("✓ Migration template loaded\n");
 
     // Step 2: Execute migration via Supabase client

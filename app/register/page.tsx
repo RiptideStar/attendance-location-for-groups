@@ -56,7 +56,7 @@ export default function RegisterPage() {
       router.push(
         `/login?registered=true&username=${data.organization.username}`
       );
-    } catch (err) {
+    } catch {
       setError("An error occurred during registration");
       setLoading(false);
     }

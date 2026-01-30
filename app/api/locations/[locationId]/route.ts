@@ -29,7 +29,7 @@ export async function PATCH(
       );
     }
 
-    const { data: location, error } = await (supabaseAdmin as any)
+    const { data: location, error } = await supabaseAdmin
       .from("organization_locations")
       .update(updateData)
       .eq("id", locationId)
@@ -69,7 +69,7 @@ export async function DELETE(
 
     const { locationId } = await params;
 
-    const { error } = await (supabaseAdmin as any)
+    const { error } = await supabaseAdmin
       .from("organization_locations")
       .delete()
       .eq("id", locationId)

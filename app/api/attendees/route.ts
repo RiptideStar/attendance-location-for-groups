@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Note: Avoid selecting events.timezone to remain compatible with databases
     // that haven't applied the timezone migration yet. The client will fall back
     // to browser timezone when event timezone is unavailable.
-    let query = (supabaseAdmin as any)
+    let query = supabaseAdmin
       .from("attendees")
       .select(
         `
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to flatten event details
-    const transformedAttendees = attendees.map((attendee: any) => ({
+    const transformedAttendees = attendees.map((attendee) => ({
       id: attendee.id,
       event_id: attendee.event_id,
       name: attendee.name,
@@ -75,8 +75,7 @@ export async function GET(request: NextRequest) {
       event_title: attendee.events?.title || "Unknown Event",
       event_start_time: attendee.events?.start_time || null,
       event_location: attendee.events?.location_address || "Unknown Location",
-      // May be null if the timezone migration hasn't been applied yet
-      event_timezone: (attendee.events as any)?.timezone ?? null,
+      event_timezone: null as string | null,
     }));
 
     return NextResponse.json(transformedAttendees);

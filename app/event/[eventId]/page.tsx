@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { CountdownTimer } from "@/components/event/CountdownTimer";
 import { LocationVerification } from "@/components/event/LocationVerification";
 import { CheckInForm } from "@/components/event/CheckInForm";
-import { formatDate, getTimeUntilRegistration, getRegistrationStatus, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
+import { formatDate, getRegistrationStatus, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 import { hasAttendedClient } from "@/lib/cookies/attendance-cookie";
 import type { Event } from "@/types/event";
 import type { CheckInFormData, CheckInResponse } from "@/types/attendance";
@@ -53,7 +53,7 @@ export default function EventCheckInPage() {
 
       const data = await response.json();
       setEvent(data);
-    } catch (err) {
+    } catch {
       setFlowState("not_found");
     }
   };
@@ -213,7 +213,7 @@ export default function EventCheckInPage() {
                   Already Checked In
                 </h2>
                 <p className="text-gray-600">
-                  You've already checked in to this event!
+                  You&apos;ve already checked in to this event!
                 </p>
               </div>
             )}
@@ -260,7 +260,7 @@ export default function EventCheckInPage() {
                   Check-In Successful!
                 </h2>
                 <p className="text-gray-600">
-                  You've been successfully checked in to this event.
+                  You&apos;ve been successfully checked in to this event.
                 </p>
               </div>
             )}

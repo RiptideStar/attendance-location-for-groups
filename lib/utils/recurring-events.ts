@@ -50,7 +50,7 @@ export function generateEventInstances(
 
     const eventStartTime = zonedTimeToUtc(
       localDateTime,
-      (recurringEvent as any).timezone || "America/New_York"
+      recurringEvent.timezone || "America/New_York"
     );
 
     const eventEndTime = new Date(
@@ -71,7 +71,7 @@ export function generateEventInstances(
       location_radius_meters: recurringEvent.location_radius_meters,
       recurring_event_id: recurringEvent.id,
       organization_id: recurringEvent.organization_id,
-      timezone: (recurringEvent as any).timezone || "America/New_York",
+      timezone: recurringEvent.timezone || "America/New_York",
     });
 
     currentDate = new Date(eventDate);
@@ -117,7 +117,7 @@ function getNextOccurrence(
   // Find the next occurrence
   const maxIterations = 365 * 2; // Prevent infinite loops (max 2 years ahead)
   let iterations = 0;
-  let candidate = new Date(fromDate);
+  const candidate = new Date(fromDate);
 
   while (iterations < maxIterations) {
     candidate.setDate(candidate.getDate() + 1);

@@ -12,16 +12,15 @@ export function upsertOrganizationLocation(
   lat: number,
   lng: number
 ): void {
-  (supabaseAdmin as any)
-    .rpc("upsert_organization_location", {
+  Promise.resolve(
+    supabaseAdmin.rpc("upsert_organization_location", {
       p_organization_id: organizationId,
       p_label: address,
       p_address: address,
       p_lat: lat,
       p_lng: lng,
     })
-    .then(() => {})
-    .catch((err: unknown) => {
-      console.error("Failed to upsert organization location:", err);
-    });
+  ).catch((err: unknown) => {
+    console.error("Failed to upsert organization location:", err);
+  });
 }

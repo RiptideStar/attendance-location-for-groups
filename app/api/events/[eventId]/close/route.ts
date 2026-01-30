@@ -17,7 +17,7 @@ export async function POST(
 
     const { eventId } = await params;
 
-    const { data: event, error } = await (supabaseAdmin as any)
+    const { data: event, error } = await supabaseAdmin
       .from("events")
       .update({ is_closed: true })
       .eq("id", eventId)
@@ -57,7 +57,7 @@ export async function DELETE(
 
     const { eventId } = await params;
 
-    const { data: event, error } = await (supabaseAdmin as any)
+    const { data: event, error } = await supabaseAdmin
       .from("events")
       .update({ is_closed: false })
       .eq("id", eventId)

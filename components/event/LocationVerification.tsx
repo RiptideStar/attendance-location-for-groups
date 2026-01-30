@@ -110,7 +110,7 @@ export function LocationVerification({
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Verifying Your Location
           </h3>
-          <p className="text-gray-600">Checking if you're at the event...</p>
+          <p className="text-gray-600">Checking if you&apos;re at the event...</p>
         </div>
       )}
 
@@ -134,7 +134,7 @@ export function LocationVerification({
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Location Verified
           </h3>
-          <p className="text-gray-600">You're at the event location!</p>
+          <p className="text-gray-600">You&apos;re at the event location!</p>
         </div>
       )}
 

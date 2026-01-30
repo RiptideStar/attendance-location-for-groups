@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: locations, error } = await (supabaseAdmin as any)
+    const { data: locations, error } = await supabaseAdmin
       .from("organization_locations")
       .select(
         "id, label, address, lat, lng, is_favorite, last_used_at, use_count"

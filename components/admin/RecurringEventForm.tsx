@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import type { RecurringEventFormData } from "@/types/recurring-event";
+import type { RecurringEventFormData, RecurrenceType } from "@/types/recurring-event";
 import { DAYS_OF_WEEK, WEEK_ORDINALS } from "@/types/recurring-event";
 import { getBrowserTimezone, getTimezoneAbbreviation } from "@/lib/utils/date-helpers";
 
@@ -235,7 +235,7 @@ export function RecurringEventForm({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  recurrenceType: e.target.value as any,
+                  recurrenceType: e.target.value as RecurrenceType,
                 })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

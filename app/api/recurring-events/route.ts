@@ -18,7 +18,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: recurringEvents, error } = await (supabaseAdmin as any)
+    const { data: recurringEvents, error } = await supabaseAdmin
       .from("recurring_events")
       .select(
         `
@@ -39,7 +39,7 @@ export async function GET() {
 
     // Transform the data to include event count
     // Supabase's (count) aggregate returns [{ count: N }], so read the value directly
-    const recurringEventsWithCount = recurringEvents.map((re: any) => ({
+    const recurringEventsWithCount = recurringEvents.map((re: Record<string, unknown> & { events?: { count: number }[] }) => ({
       ...re,
       event_count:
         Array.isArray(re.events) && re.events.length > 0
@@ -103,9 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the recurring event
-    const { data: recurringEvent, error: recurringError } = await (
-      supabaseAdmin as any
-    )
+    const { data: recurringEvent, error: recurringError } = await supabaseAdmin
       .from("recurring_events")
       .insert(recurringEventData)
       .select()
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert all event instances
-    const { data: events, error: eventsError } = await (supabaseAdmin as any)
+    const { data: events, error: eventsError } = await supabaseAdmin
       .from("events")
       .insert(eventInstances)
       .select();
@@ -140,7 +138,7 @@ export async function POST(request: NextRequest) {
     if (eventsError) {
       console.error("Error creating event instances:", eventsError);
       // Rollback: delete the recurring event
-      await (supabaseAdmin as any)
+      await supabaseAdmin
         .from("recurring_events")
         .delete()
         .eq("id", recurringEvent.id);

@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { recurringEventId } = await params;
 
-    const { data: recurringEvent, error } = await (supabaseAdmin as any)
+    const { data: recurringEvent, error } = await supabaseAdmin
       .from("recurring_events")
       .select("*")
       .eq("id", recurringEventId)
@@ -42,7 +42,7 @@ export async function DELETE(
     const { recurringEventId } = await params;
 
     // First, delete all associated events
-    const { error: eventsError } = await (supabaseAdmin as any)
+    const { error: eventsError } = await supabaseAdmin
       .from("events")
       .delete()
       .eq("recurring_event_id", recurringEventId);
@@ -56,7 +56,7 @@ export async function DELETE(
     }
 
     // Then delete the recurring event
-    const { error: recurringError } = await (supabaseAdmin as any)
+    const { error: recurringError } = await supabaseAdmin
       .from("recurring_events")
       .delete()
       .eq("id", recurringEventId);

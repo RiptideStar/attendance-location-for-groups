@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { isWithinRadius, isValidCoordinates } from "@/lib/geolocation/verification";
+import { isWithinRadius, isValidCoordinates, calculateDistance } from "@/lib/geolocation/verification";
 import { isWithinEventWindow } from "@/lib/utils/date-helpers";
 import {
   hasAttendedServer,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
     };
 
     if (!isWithinRadius(userCoords, eventCoords, typedEvent.location_radius_meters)) {
-      const distance = require("@/lib/geolocation/verification").calculateDistance(
+      const distance = calculateDistance(
         userCoords,
         eventCoords
       );
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
     }
 
     // 7. Insert attendance record into database
-    const { data: attendee, error: insertError } = await (supabaseAdmin as any)
+    const { data: attendee, error: insertError } = await supabaseAdmin
       .from("attendees")
       .insert({
         event_id: eventId,

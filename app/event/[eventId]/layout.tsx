@@ -16,11 +16,11 @@ export async function generateMetadata({
       .eq("id", eventId)
       .single();
 
-    if (error || !data || typeof (data as any).title !== "string") {
+    if (error || !data || typeof data.title !== "string") {
       return { title: "Check In" };
     }
 
-    const title = `${(data as any).title} — Check In`;
+    const title = `${data.title} — Check In`;
     return {
       title,
       openGraph: { title },
