@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { RecurringEventInsert } from "@/types/recurring-event";
 import {
@@ -6,9 +8,15 @@ import {
   validateRecurringEvent,
 } from "@/lib/utils/recurring-events";
 
-// GET /api/recurring-events - Get all recurring events
+// GET /api/recurring-events - Get all recurring events for authenticated organization
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { data: recurringEvents, error } = await (supabaseAdmin as any)
       .from("recurring_events")
       .select(
@@ -17,6 +25,7 @@ export async function GET() {
         events:events(count)
       `
       )
+      .eq("organization_id", session.user.organizationId)
       .order("start_date", { ascending: false });
 
     if (error) {
@@ -46,6 +55,12 @@ export async function GET() {
 // POST /api/recurring-events - Create a new recurring event
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     // Prepare recurring event data
@@ -69,6 +84,7 @@ export async function POST(request: NextRequest) {
       registration_window_after_minutes:
         body.registration_window_after_minutes || 30,
       location_radius_meters: body.location_radius_meters || 50,
+      organization_id: session.user.organizationId,
     };
 
     // Validate the recurring event

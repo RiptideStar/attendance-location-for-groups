@@ -31,6 +31,9 @@ function MapUpdater({ center }: { center: [number, number] }) {
   return null;
 }
 
+const DEFAULT_LAT = 39.9526;
+const DEFAULT_LNG = -75.1652;
+
 export function LocationPicker({
   address,
   lat,
@@ -42,13 +45,36 @@ export function LocationPicker({
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([
-    lat || 39.9526,
-    lng || -75.1652,
+    lat || DEFAULT_LAT,
+    lng || DEFAULT_LNG,
   ]);
   const [markerPosition, setMarkerPosition] = useState<[number, number]>([
-    lat || 39.9526,
-    lng || -75.1652,
+    lat || DEFAULT_LAT,
+    lng || DEFAULT_LNG,
   ]);
+
+  // Attempt to use the user's current location when creating a new event
+  // (i.e. when coordinates are still the defaults)
+  useEffect(() => {
+    const isDefault =
+      (lat === DEFAULT_LAT && lng === DEFAULT_LNG) || (!lat && !lng);
+    if (!isDefault || !navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setMapCenter([latitude, longitude]);
+        setMarkerPosition([latitude, longitude]);
+        onChange(address, latitude, longitude);
+      },
+      () => {
+        // Geolocation denied or unavailable — keep the defaults silently
+      },
+      { enableHighAccuracy: false, timeout: 5000 }
+    );
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const provider = new OpenStreetMapProvider();
 

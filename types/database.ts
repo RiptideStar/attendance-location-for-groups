@@ -13,6 +13,32 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      organizations: {
+        Row: {
+          id: string;
+          username: string;
+          name: string;
+          password_hash: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          username: string;
+          name: string;
+          password_hash: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          username?: string;
+          name?: string;
+          password_hash?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       events: {
         Row: {
           id: string;
@@ -27,6 +53,7 @@ export interface Database {
           location_radius_meters: number;
           is_closed: boolean;
           recurring_event_id: string | null;
+          organization_id: string;
           created_at: string;
           updated_at: string;
         };
@@ -43,6 +70,7 @@ export interface Database {
           location_radius_meters?: number;
           is_closed?: boolean;
           recurring_event_id?: string | null;
+          organization_id: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -59,6 +87,7 @@ export interface Database {
           location_radius_meters?: number;
           is_closed?: boolean;
           recurring_event_id?: string | null;
+          organization_id?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -73,6 +102,7 @@ export interface Database {
           check_in_lat: number;
           check_in_lng: number;
           user_agent: string | null;
+          organization_id: string;
           created_at: string;
         };
         Insert: {
@@ -84,6 +114,7 @@ export interface Database {
           check_in_lat: number;
           check_in_lng: number;
           user_agent?: string | null;
+          organization_id: string;
           created_at?: string;
         };
         Update: {
@@ -95,6 +126,7 @@ export interface Database {
           check_in_lat?: number;
           check_in_lng?: number;
           user_agent?: string | null;
+          organization_id?: string;
           created_at?: string;
         };
       };
@@ -118,6 +150,7 @@ export interface Database {
           registration_window_before_minutes: number;
           registration_window_after_minutes: number;
           location_radius_meters: number;
+          organization_id: string;
           created_at: string;
           updated_at: string;
         };
@@ -140,6 +173,7 @@ export interface Database {
           registration_window_before_minutes?: number;
           registration_window_after_minutes?: number;
           location_radius_meters?: number;
+          organization_id: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -162,6 +196,7 @@ export interface Database {
           registration_window_before_minutes?: number;
           registration_window_after_minutes?: number;
           location_radius_meters?: number;
+          organization_id?: string;
           created_at?: string;
           updated_at?: string;
         };

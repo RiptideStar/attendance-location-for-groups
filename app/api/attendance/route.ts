@@ -170,6 +170,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
         check_in_lat: lat,
         check_in_lng: lng,
         user_agent: request.headers.get("user-agent") || undefined,
+        organization_id: typedEvent.organization_id, // Inherit from event
       })
       .select()
       .single();

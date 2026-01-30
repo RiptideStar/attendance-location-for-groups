@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
 
 // GET /api/attendees - Get attendees with filtering
@@ -7,11 +9,17 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 //   - search: Search by name or email (case-insensitive)
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = request.nextUrl;
     const eventId = searchParams.get("event_id");
     const searchTerm = searchParams.get("search");
 
-    // Build query
+    // Build query with organization filter
     let query = (supabaseAdmin as any)
       .from("attendees")
       .select(
@@ -24,6 +32,7 @@ export async function GET(request: NextRequest) {
         )
       `
       )
+      .eq("organization_id", session.user.organizationId)
       .order("check_in_time", { ascending: false });
 
     // Filter by event if provided

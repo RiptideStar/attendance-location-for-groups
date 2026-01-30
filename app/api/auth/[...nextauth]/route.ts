@@ -1,16 +1,15 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import type { Database } from "@/types/database";
 
-// Hardcoded admin credentials
-const ADMIN_CREDENTIALS = {
-  username: process.env.ADMIN_USERNAME || "penncbc",
-  password: process.env.ADMIN_PASSWORD || "penncbc123",
-};
+type Organization = Database["public"]["Tables"]["organizations"]["Row"];
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "Admin Login",
+      name: "Organization Login",
       credentials: {
         username: {
           label: "Username",
@@ -24,26 +23,54 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        // Verify credentials
-        if (
-          credentials?.username === ADMIN_CREDENTIALS.username &&
-          credentials?.password === ADMIN_CREDENTIALS.password
-        ) {
-          // Return user object on successful authentication
-          return {
-            id: "admin",
-            name: "Penn CBC Admin",
-            email: "admin@penncbc.org",
-          };
+        if (!credentials?.username || !credentials?.password) {
+          return null;
         }
 
-        // Return null if credentials are invalid
-        return null;
+        try {
+          // Fetch organization from database
+          const { data: organization, error } = await supabaseAdmin
+            .from("organizations")
+            .select("*")
+            .eq("username", credentials.username.toLowerCase().trim())
+            .single();
+
+          if (error || !organization) {
+            console.error("Organization not found:", credentials.username);
+            return null;
+          }
+
+          const org = organization as Organization;
+
+          // Verify password
+          const isValidPassword = await bcrypt.compare(
+            credentials.password,
+            org.password_hash
+          );
+
+          if (!isValidPassword) {
+            console.error("Invalid password for:", credentials.username);
+            return null;
+          }
+
+          // Return user object with organization context
+          return {
+            id: org.id,
+            name: org.name,
+            email: `admin@${org.username}.org`, // Synthetic email
+            organizationId: org.id,
+            organizationUsername: org.username,
+            organizationName: org.name,
+          };
+        } catch (error) {
+          console.error("Error during authentication:", error);
+          return null;
+        }
       },
     }),
   ],
   pages: {
-    signIn: "/admin/login", // Custom login page
+    signIn: "/login", // Global login page
   },
   session: {
     strategy: "jwt", // Use JWT for stateless sessions
@@ -56,6 +83,9 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
+        token.organizationId = user.organizationId;
+        token.organizationUsername = user.organizationUsername;
+        token.organizationName = user.organizationName;
       }
       return token;
     },
@@ -65,6 +95,9 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.name = token.name as string;
         session.user.email = token.email as string;
+        session.user.organizationId = token.organizationId as string;
+        session.user.organizationUsername = token.organizationUsername as string;
+        session.user.organizationName = token.organizationName as string;
       }
       return session;
     },

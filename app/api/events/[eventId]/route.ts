@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { EventUpdate } from "@/types/event";
 
@@ -8,12 +10,19 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { eventId } = await params;
 
     const { data: event, error } = await (supabaseAdmin as any)
       .from("events")
       .select("*")
       .eq("id", eventId)
+      .eq("organization_id", session.user.organizationId)
       .single();
 
     if (error || !event) {
@@ -36,6 +45,12 @@ export async function PUT(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { eventId } = await params;
     const body = await request.json();
 
@@ -92,6 +107,7 @@ export async function PUT(
       .from("events")
       .update(updateData)
       .eq("id", eventId)
+      .eq("organization_id", session.user.organizationId)
       .select()
       .single();
 
@@ -119,12 +135,19 @@ export async function DELETE(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { eventId } = await params;
 
     const { error } = await (supabaseAdmin as any)
       .from("events")
       .delete()
-      .eq("id", eventId);
+      .eq("id", eventId)
+      .eq("organization_id", session.user.organizationId);
 
     if (error) {
       console.error("Error deleting event:", error);

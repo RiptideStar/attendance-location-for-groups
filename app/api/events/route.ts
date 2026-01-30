@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { EventInsert } from "@/types/event";
 
-// GET /api/events - Get all events
+// GET /api/events - Get all events for authenticated organization
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { data: events, error } = await (supabaseAdmin as any)
       .from("events")
       .select(
@@ -13,6 +21,7 @@ export async function GET() {
         attendees:attendees(count)
       `
       )
+      .eq("organization_id", session.user.organizationId)
       .order("start_time", { ascending: false });
 
     if (error) {
@@ -44,6 +53,12 @@ export async function GET() {
 // POST /api/events - Create a new event
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     // Validate required fields
@@ -109,6 +124,7 @@ export async function POST(request: NextRequest) {
       registration_window_after_minutes:
         body.registration_window_after_minutes || 30,
       location_radius_meters: body.location_radius_meters || 50,
+      organization_id: session.user.organizationId,
     };
 
     const { data: event, error } = await (supabaseAdmin as any)
