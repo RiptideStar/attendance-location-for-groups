@@ -8,7 +8,7 @@
 -- 1. Create organizations table
 -- 2. Add organization_id foreign keys to events, attendees, recurring_events
 -- 3. Update RLS policies for multi-tenant isolation
--- 4. Migrate existing data to penncbc organization
+-- 4. Optional: finalize NOT NULL constraints when data is ready
 -- =============================================================================
 
 -- =============================================================================
@@ -175,59 +175,29 @@ CREATE POLICY "Organizations can manage own recurring_events" ON recurring_event
 -- The placeholder below is for 'penncbc123' hashed with bcrypt cost factor 10
 -- This will be replaced when running the migration script
 
+-- If you are migrating an existing database with data, create organizations
+-- and backfill organization_id in events/attendees/recurring_events first.
+-- Then you can safely enforce NOT NULL using the conditional block below.
+
 DO $$
-DECLARE
-  penncbc_org_id UUID;
 BEGIN
-  -- Insert the default penncbc organization
-  INSERT INTO organizations (username, name, password_hash, created_at)
-  VALUES (
-    'penncbc',
-    'UPenn Claude Builders Club',
-    '$2a$10$PLACEHOLDER_WILL_BE_REPLACED',
-    NOW()
-  )
-  ON CONFLICT (username) DO NOTHING
-  RETURNING id INTO penncbc_org_id;
-
-  -- If the organization already exists, get its ID
-  IF penncbc_org_id IS NULL THEN
-    SELECT id INTO penncbc_org_id FROM organizations WHERE username = 'penncbc';
+  IF NOT EXISTS (SELECT 1 FROM events WHERE organization_id IS NULL) THEN
+    ALTER TABLE events ALTER COLUMN organization_id SET NOT NULL;
   END IF;
-
-  -- Update existing events with penncbc organization_id
-  UPDATE events
-  SET organization_id = penncbc_org_id
-  WHERE organization_id IS NULL;
-
-  -- Update existing attendees with penncbc organization_id
-  UPDATE attendees
-  SET organization_id = penncbc_org_id
-  WHERE organization_id IS NULL;
-
-  -- Update existing recurring_events with penncbc organization_id
-  UPDATE recurring_events
-  SET organization_id = penncbc_org_id
-  WHERE organization_id IS NULL;
-
-  -- Log migration results
-  RAISE NOTICE 'Migration complete for organization: %', penncbc_org_id;
-  RAISE NOTICE 'Events migrated: %', (SELECT COUNT(*) FROM events WHERE organization_id = penncbc_org_id);
-  RAISE NOTICE 'Attendees migrated: %', (SELECT COUNT(*) FROM attendees WHERE organization_id = penncbc_org_id);
-  RAISE NOTICE 'Recurring events migrated: %', (SELECT COUNT(*) FROM recurring_events WHERE organization_id = penncbc_org_id);
+  IF NOT EXISTS (SELECT 1 FROM attendees WHERE organization_id IS NULL) THEN
+    ALTER TABLE attendees ALTER COLUMN organization_id SET NOT NULL;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM recurring_events WHERE organization_id IS NULL) THEN
+    ALTER TABLE recurring_events ALTER COLUMN organization_id SET NOT NULL;
+  END IF;
 END $$;
-
--- Make organization_id NOT NULL after migration
-ALTER TABLE events ALTER COLUMN organization_id SET NOT NULL;
-ALTER TABLE attendees ALTER COLUMN organization_id SET NOT NULL;
-ALTER TABLE recurring_events ALTER COLUMN organization_id SET NOT NULL;
 
 -- =============================================================================
 -- MIGRATION COMPLETE
 -- =============================================================================
 -- The database now supports multiple organizations with data isolation.
 -- Next steps:
--- 1. Run migration script to replace password hash placeholder
--- 2. Update application code to use organization_id filtering
+-- 1. Create organizations via the app's /register flow
+-- 2. Backfill organization_id in existing data if upgrading from a single-tenant setup
 -- 3. Test multi-tenant isolation
 -- =============================================================================

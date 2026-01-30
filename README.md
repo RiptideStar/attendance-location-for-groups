@@ -24,6 +24,10 @@ Location-based QR code attendance system for general club/classes. Built with Ne
 - **Maps**: Leaflet + OpenStreetMap (leaflet, react-leaflet, leaflet-geosearch)
 - **Deployment**: Vercel
 
+## Changelog
+
+See the project changelog for recent updates and breaking changes: [CHANGELOG.md](CHANGELOG.md)
+
 ## Getting Started
 
 ### 1. Prerequisites
