@@ -5,25 +5,23 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import type { EventUpdate } from "@/types/event";
 
 // GET /api/events/[eventId] - Get a single event
+// Public: returns event details by ID (used by the public check-in page).
+// Authenticated: scopes the query to the session's organization.
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
+    const { eventId } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.organizationId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    let query = supabaseAdmin.from("events").select("*").eq("id", eventId);
+
+    if (session?.user?.organizationId) {
+      query = query.eq("organization_id", session.user.organizationId);
     }
 
-    const { eventId } = await params;
-
-    const { data: event, error } = await supabaseAdmin
-      .from("events")
-      .select("*")
-      .eq("id", eventId)
-      .eq("organization_id", session.user.organizationId)
-      .single();
+    const { data: event, error } = await query.single();
 
     if (error || !event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
