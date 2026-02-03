@@ -49,7 +49,8 @@ export default withAuth(
           pathname.startsWith("/event/") ||
           pathname.startsWith("/api/auth/") ||
           pathname.startsWith("/api/register") ||
-          pathname.startsWith("/api/attendance")
+          pathname.startsWith("/api/attendance") ||
+          pathname.startsWith("/api/public/")
         ) {
           return true;
         }

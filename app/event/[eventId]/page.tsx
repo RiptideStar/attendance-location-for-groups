@@ -44,7 +44,7 @@ export default function EventCheckInPage() {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(`/api/events/${eventId}`);
+      const response = await fetch(`/api/public/events/${eventId}`);
 
       if (!response.ok) {
         setFlowState("not_found");
