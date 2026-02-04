@@ -22,10 +22,6 @@ export function LocationVerification({
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    requestLocation();
-  }, []);
-
   const requestLocation = () => {
     setStatus("requesting");
     setErrorMessage("");
@@ -92,6 +88,44 @@ export function LocationVerification({
 
   return (
     <div className="p-6 bg-white rounded-lg border border-gray-200">
+      {status === "idle" && (
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+            <svg
+              className="w-8 h-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Location Required
+          </h3>
+          <p className="text-gray-600 mb-6">
+            To check in, we need to verify you&apos;re at the event location.
+          </p>
+          <button
+            onClick={requestLocation}
+            className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors touch-manipulation"
+          >
+            Enable Location
+          </button>
+        </div>
+      )}
+
       {status === "requesting" && (
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
