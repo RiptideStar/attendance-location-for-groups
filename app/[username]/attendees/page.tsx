@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { AttendeeTable } from "@/components/admin/AttendeeTable";
 import { AddAttendeeModal } from "@/components/admin/AddAttendeeModal";
 import type { AttendeeWithEvent } from "@/types/attendance";
@@ -15,6 +15,7 @@ export default function AllAttendeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const username = session?.user?.organizationUsername || "";
+  const organizationName = session?.user?.organizationName || "";
 
   useEffect(() => {
     fetchAttendees();
@@ -60,90 +61,53 @@ export default function AllAttendeesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {session?.user?.organizationName} - Admin
-          </h1>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex gap-8">
-            <Link
-              href={`/${username}/dashboard`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Events
-            </Link>
-            <Link
-              href={`/${username}/recurring-events`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Recurring Events
-            </Link>
-            <Link
-              href={`/${username}/attendees`}
-              className="py-4 border-b-2 border-blue-600 text-blue-600 font-medium"
-            >
-              All Attendees
-            </Link>
-            <Link
-              href={`/${username}/email-blast`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Email Blast
-            </Link>
-            <Link
-              href={`/${username}/settings`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Settings
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminNav username={username} organizationName={organizationName} />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
         <div className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                All Attendees
-              </h2>
-              <p className="text-gray-600">
-                Search and filter all attendees across all events
+              <h2 className="text-2xl font-bold text-gray-900">All Attendees</h2>
+              <p className="text-gray-600 mt-1">
+                Search and manage attendees across all events
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="btn btn-primary"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
               Add Attendee
             </button>
           </div>
         </div>
 
+        {/* Loading State */}
         {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4" />
             <p className="text-gray-600">Loading attendees...</p>
           </div>
         )}
 
+        {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
+          <div className="alert alert-error mb-6">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
-        {!loading && !error && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+        {/* Attendee Table */}
+        {!loading && (
+          <div className="card p-6">
             <AttendeeTable
               attendees={attendees}
               showEventColumn={true}
@@ -152,7 +116,7 @@ export default function AllAttendeesPage() {
             />
           </div>
         )}
-      </div>
+      </main>
 
       <AddAttendeeModal
         isOpen={showAddModal}

@@ -7,6 +7,7 @@ import {
   RESEND_FREE_TIER_DAILY_LIMIT,
 } from "@/lib/email/resend";
 import { decryptSmtpPassword } from "@/lib/email/smtp-crypto";
+import { substituteVariables } from "@/lib/email/template-variables";
 import type { EmailBlastRequest, EmailBlastResponse } from "@/types/email";
 
 // POST /api/email-blast/send - Send email blast
@@ -121,7 +122,10 @@ export async function POST(request: NextRequest) {
         email,
         name,
         events!inner (
-          start_time
+          id,
+          title,
+          start_time,
+          timezone
         )
       `
       )
@@ -148,13 +152,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Deduplicate by email
-    const emailMap = new Map<string, { email: string; name: string }>();
+    // Deduplicate by email, keeping event info for variable substitution
+    const emailMap = new Map<
+      string,
+      {
+        email: string;
+        name: string;
+        event: { id: string; title: string; start_time: string; timezone: string | null } | null;
+      }
+    >();
     for (const attendee of attendees || []) {
       if (!emailMap.has(attendee.email)) {
+        const event = attendee.events as unknown as {
+          id: string;
+          title: string;
+          start_time: string;
+          timezone: string | null;
+        };
         emailMap.set(attendee.email, {
           email: attendee.email,
           name: attendee.name,
+          event,
         });
       }
     }
@@ -178,13 +196,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare emails
-    const emails = recipients.map((recipient) => ({
-      to: recipient.email,
-      name: recipient.name,
-      subject,
-      ...(isHtml ? { html: emailBody } : { text: emailBody }),
-    }));
+    // Prepare emails with variable substitution
+    const emails = recipients.map((recipient) => {
+      const context = {
+        attendee: { name: recipient.name, email: recipient.email },
+        event: recipient.event
+          ? {
+              title: recipient.event.title,
+              start_time: recipient.event.start_time,
+              timezone: recipient.event.timezone || undefined,
+            }
+          : null,
+      };
+
+      const substitutedSubject = substituteVariables(subject, context);
+      const substitutedBody = substituteVariables(emailBody, context);
+
+      return {
+        to: recipient.email,
+        name: recipient.name,
+        subject: substitutedSubject,
+        ...(isHtml ? { html: substitutedBody } : { text: substitutedBody }),
+      };
+    });
 
     // Send emails
     const results = await sendBulkEmails(emails, {

@@ -3,84 +3,167 @@ import { contributors } from "@/lib/contributors";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
-      <div className="max-w-2xl w-full text-center">
-        <h1 className="text-4xl font-bold mb-4">Attendance Tracker</h1>
-        <p className="text-gray-600 mb-8">
-          Location-based QR code attendance system for clubs and courses
-        </p>
-        <div className="flex flex-col gap-3">
-          <Link
-            href="/login"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Sign In to Your Organization
-          </Link>
-          <Link
-            href="/register"
-            className="inline-block bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Register New Organization
-          </Link>
-          <a
-            href="https://github.com/RiptideStar/attendance-location-for-groups"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 text-gray-600 px-3 py-2 rounded-md border border-gray-200 bg-white hover:bg-gray-50 transition-colors text-sm"
-            aria-label="Contribute on GitHub"
-          >
-            {/* GitHub icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path fillRule="evenodd" d="M12 2C6.477 2 2 6.486 2 12.021c0 4.43 2.865 8.185 6.839 9.504.5.091.682-.217.682-.483 0-.238-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.455-1.157-1.11-1.466-1.11-1.466-.908-.62.069-.607.069-.607 1.004.071 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.833.091-.647.35-1.088.636-1.339-2.221-.253-4.556-1.114-4.556-4.957 0-1.095.39-1.99 1.029-2.69-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.027A9.564 9.564 0 0 1 12 7.5c.85.004 1.705.115 2.504.337 1.909-1.297 2.748-1.027 2.748-1.027.546 1.378.202 2.397.099 2.65.64.7 1.028 1.595 1.028 2.69 0 3.852-2.339 4.701-4.566 4.949.36.31.68.92.68 1.854 0 1.338-.012 2.418-.012 2.747 0 .268.18.58.688.481A9.525 9.525 0 0 0 22 12.02C22 6.486 17.523 2 12 2Z" clipRule="evenodd" />
-            </svg>
-            <span>Contribute on GitHub</span>
-          </a>
-        </div>
-        
-        <p className="mt-12 text-xs text-gray-400 inline-flex items-center justify-center gap-1 flex-wrap">
-          <span>Community-built with</span>
-          <a href="https://claude.com/product/claude-code" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Claude Code</a>
-          <svg className="inline-block h-3 w-3" viewBox="0 0 248 248" fill="#D97757" xmlns="http://www.w3.org/2000/svg">
-            <path d="M52.4285 162.873L98.7844 136.879L99.5485 134.602L98.7844 133.334H96.4921L88.7237 132.862L62.2346 132.153L39.3113 131.207L17.0249 130.026L11.4214 128.844L6.2 121.873L6.7094 118.447L11.4214 115.257L18.171 115.847L33.0711 116.911L55.485 118.447L71.6586 119.392L95.728 121.873H99.5485L100.058 120.337L98.7844 119.392L97.7656 118.447L74.5877 102.732L49.4995 86.1905L36.3823 76.62L29.3779 71.7757L25.8121 67.2858L24.2839 57.3608L30.6515 50.2716L39.3113 50.8623L41.4763 51.4531L50.2636 58.1879L68.9842 72.7209L93.4357 90.6804L97.0015 93.6343L98.4374 92.6652L98.6571 91.9801L97.0015 89.2625L83.757 65.2772L69.621 40.8192L63.2534 30.6579L61.5978 24.632C60.9565 22.1032 60.579 20.0111 60.579 17.4246L67.8381 7.49965L71.9133 6.19995L81.7193 7.49965L85.7946 11.0443L91.9074 24.9865L101.714 46.8451L116.996 76.62L121.453 85.4816L123.873 93.6343L124.764 96.1155H126.292V94.6976L127.566 77.9197L129.858 57.3608L132.15 30.8942L132.915 23.4505L136.608 14.4708L143.994 9.62643L149.725 12.344L154.437 19.0788L153.8 23.4505L150.998 41.6463L145.522 70.1215L141.957 89.2625H143.994L146.414 86.7813L156.093 74.0206L172.266 53.698L179.398 45.6635L187.803 36.802L193.152 32.5484H203.34L210.726 43.6549L207.415 55.1159L196.972 68.3492L188.312 79.5739L175.896 96.2095L168.191 109.585L168.882 110.689L170.738 110.53L198.755 104.504L213.91 101.787L231.994 98.7149L240.144 102.496L241.036 106.395L237.852 114.311L218.495 119.037L195.826 123.645L162.07 131.592L161.696 131.893L162.137 132.547L177.36 133.925L183.855 134.279H199.774L229.447 136.524L237.215 141.605L241.8 147.867L241.036 152.711L229.065 158.737L213.019 154.956L175.45 145.977L162.587 142.787H160.805V143.85L171.502 154.366L191.242 172.089L215.82 195.011L217.094 200.682L213.91 205.172L210.599 204.699L188.949 188.394L180.544 181.069L161.696 165.118H160.422V166.772L164.752 173.152L187.803 207.771L188.949 218.405L187.294 221.832L181.308 223.959L174.813 222.777L161.187 203.754L147.305 182.486L136.098 163.345L134.745 164.2L128.075 235.42L125.019 239.082L117.887 241.8L111.902 237.31L108.718 229.984L111.902 215.452L115.722 196.547L118.779 181.541L121.58 162.873L123.291 156.636L123.14 156.219L121.773 156.449L107.699 175.752L86.304 204.699L69.3663 222.777L65.291 224.431L58.2867 220.768L58.9235 214.27L62.8713 208.48L86.304 178.705L100.44 160.155L109.551 149.507L109.462 147.967L108.959 147.924L46.6977 188.512L35.6182 189.93L30.7788 185.44L31.4156 178.115L33.7079 175.752L52.4285 162.873Z" />
-          </svg>
-          <span>started at</span>
-          <a href="https://penncbc.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">UPenn Claude Builders Club</a>
-          {/* <span>, now maintained by builders across universities</span> */}
-        </p>
+    <div className="min-h-screen bg-gradient-subtle">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-radial opacity-60" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
-        {/* Credits */}
-        <div className="mt-10 text-left">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2 text-center">Credits</h2>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            {contributors.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center">No contributors yet.</p>
-            ) : (
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="relative max-w-5xl mx-auto px-6 py-24 sm:py-32">
+          <div className="text-center animate-fade-in-up">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-medium mb-8">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>Open Source Attendance System</span>
+            </div>
+
+            {/* Main heading */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight mb-6">
+              Attendance tracking
+              <span className="block text-gradient">made simple</span>
+            </h1>
+
+            <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 mb-10">
+              Location-based QR code check-in for clubs, courses, and organizations.
+              Verify presence with rotating codes and geofencing.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+              <Link
+                href="/register"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all hover:shadow-lg hover:shadow-indigo-500/25 active:scale-[0.98]"
+              >
+                Get Started Free
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+              <Link
+                href="/login"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="grid sm:grid-cols-3 gap-6 animate-fade-in-up delay-200">
+            <div className="card p-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Rotating QR Codes</h3>
+              <p className="text-sm text-gray-600">
+                Auto-refreshing codes every 3 seconds prevent screenshot sharing
+              </p>
+            </div>
+
+            <div className="card p-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-pink-100 text-pink-600 mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Location Verification</h3>
+              <p className="text-sm text-gray-600">
+                Geofencing ensures attendees are physically present
+              </p>
+            </div>
+
+            <div className="card p-6 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-100 text-violet-600 mb-4">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Email Blasts</h3>
+              <p className="text-sm text-gray-600">
+                Send announcements to attendees with custom templates
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer / Credits */}
+      <div className="py-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          {/* Open Source Banner */}
+          <div className="card p-6 mb-12 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <svg className="w-6 h-6 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.486 2 12.021c0 4.43 2.865 8.185 6.839 9.504.5.091.682-.217.682-.483 0-.238-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.455-1.157-1.11-1.466-1.11-1.466-.908-.62.069-.607.069-.607 1.004.071 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.833.091-.647.35-1.088.636-1.339-2.221-.253-4.556-1.114-4.556-4.957 0-1.095.39-1.99 1.029-2.69-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.027A9.564 9.564 0 0 1 12 7.5c.85.004 1.705.115 2.504.337 1.909-1.297 2.748-1.027 2.748-1.027.546 1.378.202 2.397.099 2.65.64.7 1.028 1.595 1.028 2.69 0 3.852-2.339 4.701-4.566 4.949.36.31.68.92.68 1.854 0 1.338-.012 2.418-.012 2.747 0 .268.18.58.688.481A9.525 9.525 0 0 0 22 12.02C22 6.486 17.523 2 12 2Z" clipRule="evenodd" />
+              </svg>
+              <span className="font-semibold text-gray-900">Open Source</span>
+            </div>
+            <p className="text-gray-600 text-sm mb-4">
+              Free to use and modify. Contribute to make it better.
+            </p>
+            <a
+              href="https://github.com/RiptideStar/attendance-location-for-groups"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+            >
+              View on GitHub
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+
+          {/* Credits */}
+          <div className="text-center mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Contributors</h3>
+            <p className="text-sm text-gray-600">
+              Built with{" "}
+              <a href="https://claude.com/product/claude-code" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                Claude Code
+              </a>
+              , started at{" "}
+              <a href="https://penncbc.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                UPenn Claude Builders Club
+              </a>
+            </p>
+          </div>
+
+          {contributors.length > 0 && (
+            <div className="card p-6">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {contributors.map((c, idx) => (
-                  <li key={idx} className="text-sm text-gray-700">
-                    {c.url ? (
-                      <a href={c.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {c.name}
-                      </a>
-                    ) : (
-                      <span>{c.name}</span>
-                    )}
-                    {c.affiliation ? <span className="text-gray-500"> — {c.affiliation}</span> : null}
-                    {c.role ? <span className="text-gray-400"> ({c.role})</span> : null}
+                  <li key={idx} className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-pink-400 flex items-center justify-center text-white font-medium text-xs">
+                      {c.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      {c.url ? (
+                        <a href={c.url} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-900 hover:text-indigo-600 truncate block">
+                          {c.name}
+                        </a>
+                      ) : (
+                        <span className="font-medium text-gray-900 truncate block">{c.name}</span>
+                      )}
+                      {c.affiliation && (
+                        <span className="text-gray-500 text-xs truncate block">{c.affiliation}</span>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
-            )}
-            <p className="mt-3 text-xs text-gray-500 text-center">
-              Contribute and add yourself to credits via lib/contributors.ts
-            </p>
-          </div>
+              <p className="text-center text-xs text-gray-500 mt-4 pt-4 border-t border-gray-100">
+                Add yourself via <code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">lib/contributors.ts</code>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
