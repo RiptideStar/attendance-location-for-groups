@@ -47,7 +47,7 @@ See the project changelog for recent updates and breaking changes: [CHANGELOG.md
 ### 2. Clone and Install
 
 ```bash
-cd claude-builders-club-upenn-attendance
+cd attendance-location-for-groups
 npm install
 ```
 
