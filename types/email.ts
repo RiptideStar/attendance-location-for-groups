@@ -5,6 +5,12 @@ export interface EmailBlastRecipient {
   name: string;
 }
 
+export interface EmailAttachment {
+  filename: string;
+  content: string; // Base64 encoded content
+  contentType: string;
+}
+
 export interface EmailBlastRequest {
   eventIds: string[]; // Empty array means "all events"
   dateFrom?: string; // Optional ISO date string for filtering
@@ -12,6 +18,7 @@ export interface EmailBlastRequest {
   subject: string;
   body: string;
   isHtml: boolean; // Whether body is HTML or plain text
+  attachments?: EmailAttachment[];
 }
 
 export interface EmailBlastPreview {

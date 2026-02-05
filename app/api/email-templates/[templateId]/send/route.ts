@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { sendBulkEmails, RESEND_FREE_TIER_DAILY_LIMIT } from "@/lib/email/resend";
+import { sendBulkEmails, textToHtml, wrapHtmlEmail } from "@/lib/email/resend";
 import { substituteVariables } from "@/lib/email/template-variables";
 import { decryptSmtpPassword } from "@/lib/email/smtp-crypto";
 import type { TemplateSendRequest, TemplateSendResponse } from "@/types/email-template";
@@ -129,10 +129,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         `
         email,
         name,
+        check_in_time,
+        check_in_lat,
+        check_in_lng,
+        user_agent,
         events!inner (
           id,
           title,
           start_time,
+          end_time,
+          location_address,
+          location_lat,
+          location_lng,
+          registration_window_before_minutes,
+          registration_window_after_minutes,
+          location_radius_meters,
+          is_closed,
           timezone
         )
       `
@@ -166,7 +178,24 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       {
         email: string;
         name: string;
-        event: { id: string; title: string; start_time: string; timezone: string | null };
+        check_in_time: string | null;
+        check_in_lat: number;
+        check_in_lng: number;
+        user_agent: string | null;
+        event: {
+          id: string;
+          title: string;
+          start_time: string;
+          end_time: string;
+          location_address: string;
+          location_lat: number;
+          location_lng: number;
+          registration_window_before_minutes: number | null;
+          registration_window_after_minutes: number | null;
+          location_radius_meters: number | null;
+          is_closed: boolean | null;
+          timezone: string | null;
+        };
       }
     >();
 
@@ -177,11 +206,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           id: string;
           title: string;
           start_time: string;
+          end_time: string;
+          location_address: string;
+          location_lat: number;
+          location_lng: number;
+          registration_window_before_minutes: number | null;
+          registration_window_after_minutes: number | null;
+          location_radius_meters: number | null;
+          is_closed: boolean | null;
           timezone: string | null;
         };
         recipientMap.set(email, {
           email: attendee.email,
           name: attendee.name,
+          check_in_time: attendee.check_in_time,
+          check_in_lat: attendee.check_in_lat,
+          check_in_lng: attendee.check_in_lng,
+          user_agent: attendee.user_agent ?? null,
           event,
         });
       }
@@ -200,16 +241,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       } as TemplateSendResponse);
     }
 
-    // Check rate limit
-    if (recipients.length > RESEND_FREE_TIER_DAILY_LIMIT) {
-      return NextResponse.json(
-        {
-          error: `Too many recipients (${recipients.length}). Free tier limit is ${RESEND_FREE_TIER_DAILY_LIMIT} emails/day.`,
-        },
-        { status: 400 }
-      );
-    }
-
     // Prepare emails with variable substitution
     const emails = recipients.map((recipient) => {
       const context = {
@@ -223,14 +254,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           : null,
       };
 
-      const subject = substituteVariables(template.subject, context);
-      const body = substituteVariables(template.body, context);
+      const substitutedSubject = substituteVariables(template.subject, context);
+      const substitutedBody = substituteVariables(template.body, context);
+
+      // Always send as HTML with clickable links
+      const htmlContent = wrapHtmlEmail(textToHtml(substitutedBody));
 
       return {
         to: recipient.email,
         name: recipient.name,
-        subject,
-        ...(template.is_html ? { html: body } : { text: body }),
+        subject: substitutedSubject,
+        html: htmlContent,
       };
     });
 
@@ -279,6 +313,87 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       totalSkipped: skippedCount,
       errors: errors.length > 0 ? errors : undefined,
     };
+
+    if (failureCount > 0) {
+      const failedEmailSet = new Set(
+        results
+          .filter((r) => !r.success)
+          .map((r) => r.email.toLowerCase())
+      );
+      const failedRecipients = recipients.filter((recipient) =>
+        failedEmailSet.has(recipient.email.toLowerCase())
+      );
+
+      const failedByEvent = new Map<
+        string,
+        {
+          event: NonNullable<typeof failedRecipients[number]["event"]>;
+          attendees: typeof failedRecipients;
+        }
+      >();
+
+      for (const recipient of failedRecipients) {
+        const eventId = recipient.event.id;
+        if (!failedByEvent.has(eventId)) {
+          failedByEvent.set(eventId, {
+            event: recipient.event,
+            attendees: [],
+          });
+        }
+        failedByEvent.get(eventId)!.attendees.push(recipient);
+      }
+
+      for (const { event, attendees } of failedByEvent.values()) {
+        const newEventTitle = `Failed Email Send - ${event.title}`;
+        const { data: newEvent, error: newEventError } = await supabaseAdmin
+          .from("events")
+          .insert({
+            title: newEventTitle,
+            start_time: event.start_time,
+            end_time: event.end_time,
+            location_address: event.location_address,
+            location_lat: event.location_lat,
+            location_lng: event.location_lng,
+            registration_window_before_minutes:
+              event.registration_window_before_minutes ?? 30,
+            registration_window_after_minutes:
+              event.registration_window_after_minutes ?? 30,
+            location_radius_meters: event.location_radius_meters ?? 50,
+            is_closed: true,
+            timezone: event.timezone || "America/New_York",
+            organization_id: organizationId,
+          })
+          .select("id")
+          .single();
+
+        if (newEventError || !newEvent) {
+          console.error("Failed to create failed-email event:", newEventError);
+          continue;
+        }
+
+        const attendeeRows = attendees.map((attendee) => ({
+          event_id: newEvent.id,
+          organization_id: organizationId,
+          name: attendee.name,
+          email: attendee.email,
+          check_in_time: attendee.check_in_time,
+          check_in_lat: attendee.check_in_lat,
+          check_in_lng: attendee.check_in_lng,
+          user_agent: attendee.user_agent ?? null,
+        }));
+
+        const { error: attendeeInsertError } = await supabaseAdmin
+          .from("attendees")
+          .insert(attendeeRows);
+
+        if (attendeeInsertError) {
+          console.error(
+            "Failed to insert failed-email attendees:",
+            attendeeInsertError
+          );
+        }
+      }
+    }
 
     return NextResponse.json(response);
   } catch (error) {

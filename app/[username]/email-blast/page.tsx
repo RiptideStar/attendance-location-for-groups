@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession, signOut } from "next-auth/react";
-import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { EventMultiSelect } from "@/components/admin/email/EventMultiSelect";
 import { EmailComposer } from "@/components/admin/email/EmailComposer";
 import { EmailPreview } from "@/components/admin/email/EmailPreview";
@@ -10,7 +10,7 @@ import { TemplateList } from "@/components/admin/email/TemplateList";
 import { TemplateForm } from "@/components/admin/email/TemplateForm";
 import { VariableHelp } from "@/components/admin/email/VariableHelp";
 import type { EventWithCount } from "@/types/event";
-import type { EmailBlastPreview, EmailBlastResponse } from "@/types/email";
+import type { EmailAttachment, EmailBlastPreview, EmailBlastResponse } from "@/types/email";
 import type {
   EmailTemplateWithStats,
   TemplateSendResponse,
@@ -22,6 +22,7 @@ type Step = "select" | "compose" | "preview" | "sending" | "complete";
 export default function EmailBlastPage() {
   const { data: session } = useSession();
   const username = session?.user?.organizationUsername || "";
+  const organizationName = session?.user?.organizationName || "";
 
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>("templates");
@@ -44,6 +45,7 @@ export default function EmailBlastPage() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [isHtml, setIsHtml] = useState(false);
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   // Preview & sending
   const [preview, setPreview] = useState<EmailBlastPreview | null>(null);
@@ -135,6 +137,7 @@ export default function EmailBlastPage() {
           subject,
           body,
           isHtml,
+          attachments: attachments.length > 0 ? attachments : undefined,
         }),
       });
 
@@ -160,6 +163,7 @@ export default function EmailBlastPage() {
     setSubject("");
     setBody("");
     setIsHtml(false);
+    setAttachments([]);
     setPreview(null);
     setSendResult(null);
     setStep("select");
@@ -250,7 +254,7 @@ export default function EmailBlastPage() {
 
       setSendResult(data);
       setStep("complete");
-      fetchTemplates(); // Refresh to update sent counts
+      fetchTemplates();
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setStep("select");
@@ -258,74 +262,20 @@ export default function EmailBlastPage() {
   };
 
   const stepIndex = ["select", "compose", "preview", "sending", "complete"].indexOf(step);
-
-  // Check if we're in template send mode
   const isTemplateSendMode = sendingTemplate !== null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {session?.user?.organizationName} - Admin
-            </h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {session?.user?.name}
-              </span>
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex gap-8">
-            <Link
-              href={`/${username}/dashboard`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Events
-            </Link>
-            <Link
-              href={`/${username}/recurring-events`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Recurring Events
-            </Link>
-            <Link
-              href={`/${username}/attendees`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              All Attendees
-            </Link>
-            <Link
-              href={`/${username}/email-blast`}
-              className="py-4 border-b-2 border-blue-600 text-blue-600 font-medium"
-            >
-              Email Blast
-            </Link>
-            <Link
-              href={`/${username}/settings`}
-              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-            >
-              Settings
-            </Link>
-          </nav>
-        </div>
-      </div>
+      <AdminNav username={username} organizationName={organizationName} />
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Email Blast</h2>
+          <p className="text-gray-600 mt-1">Send announcements to your attendees</p>
+        </div>
+
         {/* Sub-tabs: Templates / Compose */}
         {!isTemplateSendMode && step !== "complete" && (
           <div className="mb-6 flex gap-2">
@@ -334,45 +284,62 @@ export default function EmailBlastPage() {
                 setActiveTab("templates");
                 handleReset();
               }}
-              className={`px-4 py-2 rounded-lg font-medium ${
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === "templates"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
               }`}
             >
-              Saved Templates
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Saved Templates
+              </span>
             </button>
             <button
               onClick={() => {
                 setActiveTab("compose");
                 handleReset();
               }}
-              className={`px-4 py-2 rounded-lg font-medium ${
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === "compose"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
               }`}
             >
-              Compose New
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Compose New
+              </span>
             </button>
           </div>
         )}
 
         {/* Template Send Mode Header */}
         {isTemplateSendMode && step !== "complete" && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 card p-4 border-indigo-200 bg-indigo-50">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-blue-900">
-                  Sending Template: {sendingTemplate.name}
-                </h3>
-                <p className="text-sm text-blue-700">
-                  Only attendees who haven&apos;t received this template will get the email
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-medium text-indigo-900">
+                    Sending: {sendingTemplate.name}
+                  </h3>
+                  <p className="text-sm text-indigo-700">
+                    Only new attendees will receive this email
+                  </p>
+                </div>
               </div>
               <button
                 onClick={handleReset}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="btn btn-ghost text-indigo-600 hover:text-indigo-800"
               >
                 Cancel
               </button>
@@ -381,8 +348,11 @@ export default function EmailBlastPage() {
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            {error}
+          <div className="alert alert-error mb-6 animate-fade-in">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
@@ -410,19 +380,27 @@ export default function EmailBlastPage() {
                 ).map((label, i) => (
                   <div key={label} className="flex items-center">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                         i <= Math.min(stepIndex, isTemplateSendMode ? 1 : 2)
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-600"
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-200 text-gray-500"
                       }`}
                     >
-                      {i + 1}
+                      {i < stepIndex ? (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        i + 1
+                      )}
                     </div>
-                    <span className="ml-2 text-sm font-medium">{label}</span>
+                    <span className={`ml-2 text-sm font-medium ${
+                      i <= stepIndex ? "text-gray-900" : "text-gray-500"
+                    }`}>{label}</span>
                     {i < (isTemplateSendMode ? 1 : 2) && (
                       <div
-                        className={`w-16 h-1 mx-4 ${
-                          i < stepIndex ? "bg-blue-600" : "bg-gray-200"
+                        className={`w-12 sm:w-20 h-1 mx-3 rounded-full transition-colors ${
+                          i < stepIndex ? "bg-indigo-600" : "bg-gray-200"
                         }`}
                       />
                     )}
@@ -433,7 +411,7 @@ export default function EmailBlastPage() {
 
             {/* Event Selection */}
             {step === "select" && (
-              <div>
+              <div className="card p-6">
                 <EventMultiSelect
                   events={events}
                   loading={eventsLoading}
@@ -456,27 +434,21 @@ export default function EmailBlastPage() {
                       : "Next: Compose Email"
                   }
                 />
-                {isTemplateSendMode && (
-                  <p className="mt-4 text-sm text-gray-500 text-center">
-                    Click &ldquo;Next&rdquo; to send to new attendees only
-                  </p>
-                )}
               </div>
             )}
 
             {/* Compose Step */}
             {step === "compose" && !isTemplateSendMode && (
-              <div>
+              <div className="card p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <VariableHelp
                     onInsert={(v) => {
-                      // Insert at cursor position in body
                       setBody((prev) => prev + v);
                     }}
                   />
                   <button
                     onClick={() => setShowTemplateForm(true)}
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                   >
                     Save as Template
                   </button>
@@ -485,9 +457,11 @@ export default function EmailBlastPage() {
                   subject={subject}
                   body={body}
                   isHtml={isHtml}
+                  attachments={attachments}
                   onSubjectChange={setSubject}
                   onBodyChange={setBody}
                   onIsHtmlChange={setIsHtml}
+                  onAttachmentsChange={setAttachments}
                   onBack={() => setStep("select")}
                   onNext={handlePreview}
                   loading={previewLoading}
@@ -497,38 +471,38 @@ export default function EmailBlastPage() {
 
             {/* Preview Step */}
             {(step === "preview" || step === "sending") && preview && !isTemplateSendMode && (
-              <EmailPreview
-                preview={preview}
-                subject={subject}
-                body={body}
-                isHtml={isHtml}
-                sending={step === "sending"}
-                onBack={() => setStep("compose")}
-                onSend={handleSend}
-              />
+              <div className="card p-6">
+                <EmailPreview
+                  preview={preview}
+                  subject={subject}
+                  body={body}
+                  attachments={attachments}
+                  sending={step === "sending"}
+                  onBack={() => setStep("compose")}
+                  onSend={handleSend}
+                />
+              </div>
             )}
           </>
         )}
 
         {/* Template send sending state */}
         {isTemplateSendMode && step === "sending" && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Sending emails...</p>
+          <div className="card p-12 text-center">
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Sending emails...</p>
           </div>
         )}
 
         {/* Completion */}
         {step === "complete" && sendResult && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div
-              className={`text-center mb-6 ${
-                sendResult.success ? "text-green-600" : "text-yellow-600"
-              }`}
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-green-100">
+          <div className="card p-8 animate-scale-in">
+            <div className="text-center mb-8">
+              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                sendResult.success ? "bg-green-100" : "bg-yellow-100"
+              }`}>
                 <svg
-                  className="w-8 h-8 text-green-600"
+                  className={`w-8 h-8 ${sendResult.success ? "text-green-600" : "text-yellow-600"}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -541,33 +515,33 @@ export default function EmailBlastPage() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
                 {sendResult.success
                   ? "Emails Sent Successfully!"
                   : "Emails Sent with Errors"}
               </h3>
-              <p>{sendResult.message}</p>
+              <p className="text-gray-600">{sendResult.message}</p>
             </div>
 
-            <div className={`grid gap-4 mb-6 ${
+            <div className={`grid gap-4 mb-8 ${
               "totalSkipped" in sendResult ? "grid-cols-3" : "grid-cols-2"
             }`}>
-              <div className="bg-green-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <div className="bg-green-50 p-4 rounded-xl text-center">
+                <div className="text-3xl font-bold text-green-600">
                   {sendResult.totalSent}
                 </div>
                 <div className="text-sm text-gray-600">Sent</div>
               </div>
               {"totalSkipped" in sendResult && (
-                <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-gray-600">
+                <div className="bg-gray-50 p-4 rounded-xl text-center">
+                  <div className="text-3xl font-bold text-gray-600">
                     {sendResult.totalSkipped}
                   </div>
                   <div className="text-sm text-gray-600">Already Received</div>
                 </div>
               )}
-              <div className="bg-red-50 p-4 rounded-lg text-center">
-                <div className="text-2xl font-bold text-red-600">
+              <div className="bg-red-50 p-4 rounded-xl text-center">
+                <div className="text-3xl font-bold text-red-600">
                   {sendResult.totalFailed}
                 </div>
                 <div className="text-sm text-gray-600">Failed</div>
@@ -575,8 +549,8 @@ export default function EmailBlastPage() {
             </div>
 
             {sendResult.errors && sendResult.errors.length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-medium mb-2">Failed Emails:</h4>
+              <div className="mb-6 p-4 bg-red-50 rounded-xl">
+                <h4 className="font-medium text-red-900 mb-2">Failed Emails:</h4>
                 <ul className="text-sm text-red-600 space-y-1 max-h-40 overflow-y-auto">
                   {sendResult.errors.slice(0, 10).map((err, i) => (
                     <li key={i}>
@@ -594,13 +568,13 @@ export default function EmailBlastPage() {
 
             <button
               onClick={handleReset}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="w-full btn btn-primary py-3"
             >
               Send Another Email
             </button>
           </div>
         )}
-      </div>
+      </main>
 
       {/* Template Form Modal */}
       {showTemplateForm && (
