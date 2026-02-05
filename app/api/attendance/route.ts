@@ -6,6 +6,7 @@ import {
   hasAttendedServer,
   createAttendanceCookie,
 } from "@/lib/cookies/attendance-cookie";
+import { verifyQrToken } from "@/lib/security/qr-tokens";
 import type { CheckInSubmission, CheckInResponse } from "@/types/attendance";
 import type { Database } from "@/types/database";
 
@@ -13,10 +14,17 @@ import type { Database } from "@/types/database";
 export async function POST(request: NextRequest): Promise<NextResponse<CheckInResponse>> {
   try {
     const body: CheckInSubmission = await request.json();
-    const { eventId, name, email, lat, lng } = body;
+    const { eventId, name, email, lat, lng, qrToken } = body;
 
     // 1. Validate input
-    if (!eventId || !name || !email || lat === undefined || lng === undefined) {
+    if (
+      !eventId ||
+      !name ||
+      !email ||
+      lat === undefined ||
+      lng === undefined ||
+      !qrToken
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -35,6 +43,23 @@ export async function POST(request: NextRequest): Promise<NextResponse<CheckInRe
           success: false,
           error: "Invalid email format",
           code: "validation_error",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate QR token
+    const qrValidation = verifyQrToken(eventId, qrToken);
+    if (!qrValidation.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            qrValidation.reason === "missing"
+              ? "QR code is required to check in"
+              : "QR code is invalid or expired. Please rescan.",
+          code:
+            qrValidation.reason === "missing" ? "qr_required" : "qr_invalid",
         },
         { status: 400 }
       );

@@ -77,6 +77,9 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-here  # Generate with: openssl rand -base64 32
 
+# SMTP (required for per-org SMTP password encryption)
+SMTP_SECRET_KEY=your-secret-here  # Generate with: openssl rand -base64 32
+
 # App
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
@@ -112,13 +115,25 @@ Run the timezone migration so events store their IANA timezone:
 
 Note: If you haven't applied this migration yet, the app falls back to the viewer's browser timezone.
 
-### 7. Run Development Server
+### 7. Add Per-Organization SMTP Columns
+
+If you want each organization to send from its own SMTP credentials, apply:
+
+- [supabase/migrations/006_add_organization_smtp.sql](supabase/migrations/006_add_organization_smtp.sql)
+- [supabase/migrations/007_add_organization_smtp_encryption.sql](supabase/migrations/007_add_organization_smtp_encryption.sql)
+
+### 8. Run Development Server
 
 ```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+## Per-Organization SMTP
+
+Each organization can configure its own SMTP settings under `/:username/settings`.
+Passwords are encrypted at rest using `SMTP_SECRET_KEY`.
 
 ## Usage
 
@@ -181,6 +196,8 @@ Open [http://localhost:3000](http://localhost:3000)
 - [supabase/schema.sql](supabase/schema.sql) - Base database schema
 - [supabase/migrations/002_add_multi_tenant_support.sql](supabase/migrations/002_add_multi_tenant_support.sql) - Multi-tenant migration (script will produce a ready version)
 - [supabase/migrations/004_add_event_timezone.sql](supabase/migrations/004_add_event_timezone.sql) - Event timezone column
+- [supabase/migrations/006_add_organization_smtp.sql](supabase/migrations/006_add_organization_smtp.sql) - Per-org SMTP columns
+- [supabase/migrations/007_add_organization_smtp_encryption.sql](supabase/migrations/007_add_organization_smtp_encryption.sql) - SMTP password encryption fields
 - [middleware.ts](middleware.ts) - Org route protection and redirects
 - [app/api/attendance/route.ts](app/api/attendance/route.ts) - Check-in API with validations
 - [app/api/attendees/route.ts](app/api/attendees/route.ts) - Organization-scoped attendee API

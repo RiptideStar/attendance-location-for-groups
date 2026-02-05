@@ -23,6 +23,7 @@ export interface CheckInSubmission extends CheckInFormData {
   eventId: string;
   lat: number;
   lng: number;
+  qrToken: string;
 }
 
 // Check-in response types
@@ -41,6 +42,8 @@ export interface CheckInError {
     | "outside_window"
     | "event_closed"
     | "event_not_found"
+    | "qr_required"
+    | "qr_invalid"
     | "validation_error"
     | "server_error";
 }

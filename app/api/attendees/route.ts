@@ -87,3 +87,134 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// POST /api/attendees - Manually add an attendee (admin only)
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { event_id, name, email } = body;
+
+    // Validate required fields
+    if (!event_id || !name || !email) {
+      return NextResponse.json(
+        { error: "Missing required fields: event_id, name, email" },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the event belongs to this organization
+    const { data: event, error: eventError } = await supabaseAdmin
+      .from("events")
+      .select("id, organization_id, location_lat, location_lng")
+      .eq("id", event_id)
+      .single();
+
+    if (eventError || !event) {
+      return NextResponse.json(
+        { error: "Event not found" },
+        { status: 404 }
+      );
+    }
+
+    if (event.organization_id !== session.user.organizationId) {
+      return NextResponse.json(
+        { error: "Event does not belong to your organization" },
+        { status: 403 }
+      );
+    }
+
+    // Insert the attendee with event's location as check-in location (manual add)
+    const { data: attendee, error: insertError } = await supabaseAdmin
+      .from("attendees")
+      .insert({
+        event_id,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        check_in_lat: event.location_lat,
+        check_in_lng: event.location_lng,
+        user_agent: "Manual entry by admin",
+        organization_id: session.user.organizationId,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Error inserting attendee:", insertError);
+      return NextResponse.json(
+        { error: "Failed to add attendee" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(attendee, { status: 201 });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/attendees - Mass delete attendees (admin only)
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.organizationId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { ids } = body;
+
+    // Validate input
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: "Missing required field: ids (array of attendee IDs)" },
+        { status: 400 }
+      );
+    }
+
+    // Delete attendees that belong to this organization
+    const { error: deleteError, count } = await supabaseAdmin
+      .from("attendees")
+      .delete({ count: "exact" })
+      .in("id", ids)
+      .eq("organization_id", session.user.organizationId);
+
+    if (deleteError) {
+      console.error("Error deleting attendees:", deleteError);
+      return NextResponse.json(
+        { error: "Failed to delete attendees" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      deleted: count,
+    });
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

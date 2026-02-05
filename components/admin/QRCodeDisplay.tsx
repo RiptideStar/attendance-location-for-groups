@@ -1,7 +1,7 @@
 "use client";
 
 import { QRCodeCanvas } from "qrcode.react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface QRCodeDisplayProps {
   eventId: string;
@@ -10,125 +10,130 @@ interface QRCodeDisplayProps {
 
 export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const eventUrl = `${baseUrl}/event/${eventId}`;
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [imgCopied, setImgCopied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [loadingToken, setLoadingToken] = useState(false);
+  const [error, setError] = useState("");
 
-  // Convert the hidden canvas to a data URL for an <img> tag
+  const eventUrl = useMemo(() => {
+    if (!token) return "";
+    return `${baseUrl}/event/${eventId}?qr=${token}`;
+  }, [baseUrl, eventId, token]);
+
   useEffect(() => {
-    const container = canvasContainerRef.current;
-    if (!container) return;
-    const canvas = container.querySelector("canvas");
-    if (!canvas) return;
-    setImgSrc(canvas.toDataURL("image/png"));
-  }, [eventId, eventUrl]);
+    if (!showModal) return;
 
-  const getHighResBlob = useCallback((): Promise<Blob | null> => {
-    const container = canvasContainerRef.current;
-    if (!container) return Promise.resolve(null);
-    const sourceCanvas = container.querySelector("canvas");
-    if (!sourceCanvas) return Promise.resolve(null);
+    let canceled = false;
+    const fetchToken = async () => {
+      try {
+        setLoadingToken(true);
+        setError("");
+        const response = await fetch(`/api/events/${eventId}/qr-token`);
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error || "Failed to fetch QR token");
+        }
+        const data = await response.json();
+        if (canceled) return;
+        setToken(data.token);
+        setExpiresAt(data.expiresAt);
+      } catch (err) {
+        if (!canceled) {
+          setError(err instanceof Error ? err.message : "Failed to fetch QR code");
+        }
+      } finally {
+        if (!canceled) {
+          setLoadingToken(false);
+        }
+      }
+    };
 
-    const size = 512;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return Promise.resolve(null);
+    fetchToken();
+    const refreshInterval = setInterval(fetchToken, 3000);
+    return () => {
+      canceled = true;
+      clearInterval(refreshInterval);
+    };
+  }, [eventId, showModal]);
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
-    ctx.drawImage(sourceCanvas, 0, 0, size, size);
-
-    return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
-  }, []);
-
-  const downloadQR = async () => {
-    const blob = await getHighResBlob();
-    if (!blob) return;
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `qr-code-${eventTitle.replace(/\s+/g, "-").toLowerCase()}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(eventUrl);
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
-  };
-
-  const copyImage = async () => {
-    const blob = await getHighResBlob();
-    if (!blob) return;
-    try {
-      await navigator.clipboard.write([
-        new ClipboardItem({ "image/png": blob }),
-      ]);
-      setImgCopied(true);
-      setTimeout(() => setImgCopied(false), 2000);
-    } catch {
-      // Fallback: download instead if clipboard API not supported
-      downloadQR();
-    }
-  };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 bg-white rounded-lg border border-gray-200">
-      {/* Hidden canvas used to generate the image */}
-      <div ref={canvasContainerRef} className="hidden">
-        <QRCodeCanvas
-          value={eventUrl}
-          size={200}
-          level="H"
-          includeMargin={true}
-        />
-      </div>
-
-      {/* Rendered as <img> so it's copyable via right-click / long-press */}
-      {imgSrc && (
-        <img
-          src={imgSrc}
-          alt={`QR code for ${eventTitle}`}
-          width={200}
-          height={200}
-          className="border-4 border-white shadow-sm"
-        />
-      )}
-
-      <div className="text-center">
-        <p className="text-sm font-mono text-gray-600 break-all max-w-xs select-all">
-          {eventUrl}
+    <>
+      <div className="flex flex-col items-center gap-3 p-4 bg-white rounded-lg border border-gray-200">
+        <p className="text-sm text-gray-600 text-center">
+          Use the rotating QR code for in-person check-in.
         </p>
-      </div>
-
-      <div className="flex gap-2 flex-wrap justify-center">
         <button
-          onClick={copyLink}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-        >
-          {linkCopied ? "Copied!" : "Copy Link"}
-        </button>
-        <button
-          onClick={copyImage}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-        >
-          {imgCopied ? "Copied!" : "Copy QR"}
-        </button>
-        <button
-          onClick={downloadQR}
+          onClick={() => setShowModal(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
-          Download
+          Show Rotating QR
         </button>
       </div>
-    </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Rotating QR Code
+                </h2>
+                <p className="text-sm text-gray-600">{eventTitle}</p>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col items-center gap-4">
+              {error && (
+                <div className="w-full bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="w-72 h-72 flex items-center justify-center border border-gray-200 rounded-lg bg-gray-50">
+                {loadingToken && !eventUrl ? (
+                  <div className="text-gray-500 text-sm">Loading QR...</div>
+                ) : eventUrl ? (
+                  <QRCodeCanvas
+                    value={eventUrl}
+                    size={256}
+                    level="H"
+                    includeMargin={true}
+                  />
+                ) : (
+                  <div className="text-gray-500 text-sm">
+                    QR code unavailable
+                  </div>
+                )}
+              </div>
+
+              <div className="text-center">
+                {secondsLeft !== null && (
+                  <p className="text-xs text-gray-500">
+                    Expires in {secondsLeft}s
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

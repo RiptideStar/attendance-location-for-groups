@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { CountdownTimer } from "@/components/event/CountdownTimer";
 import { LocationVerification } from "@/components/event/LocationVerification";
 import { CheckInForm } from "@/components/event/CheckInForm";
@@ -15,6 +15,7 @@ type FlowState =
   | "loading"
   | "not_found"
   | "countdown"
+  | "qr_required"
   | "location_verification"
   | "check_in_form"
   | "success"
@@ -25,6 +26,8 @@ type FlowState =
 export default function EventCheckInPage() {
   const params = useParams();
   const eventId = params.eventId as string;
+  const searchParams = useSearchParams();
+  const qrToken = searchParams.get("qr") || "";
 
   const [event, setEvent] = useState<Event | null>(null);
   const [flowState, setFlowState] = useState<FlowState>("loading");
@@ -40,7 +43,7 @@ export default function EventCheckInPage() {
     if (event) {
       checkStatus();
     }
-  }, [event]);
+  }, [event, qrToken]);
 
   const fetchEvent = async () => {
     try {
@@ -81,7 +84,11 @@ export default function EventCheckInPage() {
       setFlowState("countdown");
     } else {
       // Registration is open
-      setFlowState("location_verification");
+      if (!qrToken) {
+        setFlowState("qr_required");
+      } else {
+        setFlowState("location_verification");
+      }
     }
   };
 
@@ -106,6 +113,10 @@ export default function EventCheckInPage() {
     setErrorMessage("");
 
     try {
+      if (!qrToken) {
+        throw new Error("QR code is required. Please scan the event QR code.");
+      }
+
       const response = await fetch("/api/attendance", {
         method: "POST",
         headers: {
@@ -117,6 +128,7 @@ export default function EventCheckInPage() {
           email: formData.email,
           lat: userCoords.lat,
           lng: userCoords.lng,
+          qrToken,
         }),
       });
 
@@ -179,6 +191,17 @@ export default function EventCheckInPage() {
                 }
                 onComplete={handleCountdownComplete}
               />
+            )}
+
+            {flowState === "qr_required" && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Scan the Rotating QR Code
+                </h2>
+                <p className="text-gray-600">
+                  Please scan the event&apos;s rotating QR code to begin check-in.
+                </p>
+              </div>
             )}
 
             {flowState === "closed" && (
@@ -287,7 +310,9 @@ export default function EventCheckInPage() {
                 </h2>
                 <p className="text-gray-600 mb-4">{errorMessage}</p>
                 <button
-                  onClick={() => setFlowState("location_verification")}
+                  onClick={() =>
+                    setFlowState(qrToken ? "location_verification" : "qr_required")
+                  }
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Try Again

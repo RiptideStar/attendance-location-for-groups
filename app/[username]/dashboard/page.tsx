@@ -126,6 +126,18 @@ export default function OrganizationDashboard() {
             >
               All Attendees
             </Link>
+            <Link
+              href={`/${username}/email-blast`}
+              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+            >
+              Email Blast
+            </Link>
+            <Link
+              href={`/${username}/settings`}
+              className="py-4 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+            >
+              Settings
+            </Link>
           </nav>
         </div>
       </div>

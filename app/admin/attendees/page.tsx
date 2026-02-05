@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AttendeeTable } from "@/components/admin/AttendeeTable";
+import { AddAttendeeModal } from "@/components/admin/AddAttendeeModal";
 import type { AttendeeWithEvent } from "@/types/attendance";
 
 export default function AllAttendeesPage() {
   const [attendees, setAttendees] = useState<AttendeeWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchAttendees();
@@ -29,6 +31,26 @@ export default function AllAttendeesPage() {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (ids: string[]) => {
+    try {
+      setError("");
+      const response = await fetch("/api/attendees", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error || "Failed to delete attendees");
+      }
+
+      await fetchAttendees();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -66,12 +88,23 @@ export default function AllAttendeesPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            All Attendees
-          </h2>
-          <p className="text-gray-600">
-            Search and filter all attendees across all events
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                All Attendees
+              </h2>
+              <p className="text-gray-600">
+                Search and filter all attendees across all events
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Attendee
+            </button>
+          </div>
         </div>
 
         {loading && (
@@ -89,10 +122,21 @@ export default function AllAttendeesPage() {
 
         {!loading && !error && (
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <AttendeeTable attendees={attendees} showEventColumn={true} />
+            <AttendeeTable
+              attendees={attendees}
+              showEventColumn={true}
+              selectable={true}
+              onDelete={handleDelete}
+            />
           </div>
         )}
       </div>
+
+      <AddAttendeeModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={fetchAttendees}
+      />
     </div>
   );
 }
