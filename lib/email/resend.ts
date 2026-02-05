@@ -21,7 +21,7 @@ if (!resendApiKey && !shouldUseSmtp) {
 
 export const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-const envSmtpConfig = shouldUseSmtp
+const envSmtpConfig: SmtpConfig | null = shouldUseSmtp
   ? {
       host: smtpHost,
       port: smtpPort,

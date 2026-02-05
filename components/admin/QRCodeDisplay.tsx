@@ -15,6 +15,7 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [loadingToken, setLoadingToken] = useState(false);
   const [error, setError] = useState("");
+  const [now, setNow] = useState(() => Date.now());
 
   const eventUrl = useMemo(() => {
     if (!token) return "";
@@ -56,6 +57,18 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
       clearInterval(refreshInterval);
     };
   }, [eventId, showModal]);
+
+  useEffect(() => {
+    if (!showModal) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [showModal]);
+
+  const secondsLeft = useMemo(() => {
+    if (!expiresAt) return null;
+    const remainingMs = expiresAt - now;
+    return Math.max(0, Math.ceil(remainingMs / 1000));
+  }, [expiresAt, now]);
 
 
   return (
