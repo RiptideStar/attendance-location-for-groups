@@ -2,6 +2,7 @@
 
 import { QRCodeCanvas } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface QRCodeDisplayProps {
   eventId: string;
@@ -16,6 +17,8 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
   const [loadingToken, setLoadingToken] = useState(false);
   const [error, setError] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [qrSize, setQrSize] = useState(224);
+  const [mounted, setMounted] = useState(false);
 
   const eventUrl = useMemo(() => {
     if (!token) return "";
@@ -51,7 +54,7 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
     };
 
     fetchToken();
-    const refreshInterval = setInterval(fetchToken, 3000);
+    const refreshInterval = setInterval(fetchToken, 5000);
     return () => {
       canceled = true;
       clearInterval(refreshInterval);
@@ -64,6 +67,22 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
     return () => clearInterval(timer);
   }, [showModal]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!showModal) return;
+    const updateSize = () => {
+      const viewport = Math.min(window.innerWidth, window.innerHeight);
+      const next = Math.max(240, Math.min(720, viewport - 220));
+      setQrSize(next);
+    };
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, [showModal]);
+
   const secondsLeft = useMemo(() => {
     if (!expiresAt) return null;
     const remainingMs = expiresAt - now;
@@ -72,7 +91,7 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
 
   const progressPercent = useMemo(() => {
     if (secondsLeft === null) return 100;
-    return (secondsLeft / 3) * 100;
+    return (secondsLeft / 5) * 100;
   }, [secondsLeft]);
 
   return (
@@ -99,100 +118,109 @@ export function QRCodeDisplay({ eventId, eventTitle }: QRCodeDisplayProps) {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div
-            className="modal-content w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold text-gray-900">Rotating QR Code</h2>
-                <p className="text-sm text-gray-600 truncate max-w-[250px]">{eventTitle}</p>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+      {showModal && mounted
+        ? createPortal(
+            <div
+              className="modal-overlay modal-overlay-fullscreen"
+              onClick={() => setShowModal(false)}
+            >
+              <div
+                className="modal-content modal-fullscreen flex flex-col"
+                onClick={(e) => e.stopPropagation()}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 flex flex-col items-center">
-              {error && (
-                <div className="w-full alert alert-error mb-4">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <span>{error}</span>
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold text-gray-900">Rotating QR Code</h2>
+                    <p className="text-sm text-gray-600 truncate max-w-[250px]">{eventTitle}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-              )}
 
-              <div className="relative">
-                <div className="w-64 h-64 flex items-center justify-center bg-white rounded-2xl border-2 border-gray-100 shadow-sm overflow-hidden">
-                  {loadingToken && !eventUrl ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-                      <span className="text-sm text-gray-500">Generating...</span>
-                    </div>
-                  ) : eventUrl ? (
-                    <QRCodeCanvas
-                      value={eventUrl}
-                      size={224}
-                      level="H"
-                      includeMargin={true}
-                    />
-                  ) : (
-                    <div className="text-gray-500 text-sm text-center px-4">
-                      QR code unavailable
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col items-center justify-center">
+                  {error && (
+                    <div className="w-full alert alert-error mb-4">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span>{error}</span>
                     </div>
                   )}
+
+                  <div className="relative">
+                    <div
+                      className="flex items-center justify-center bg-white rounded-2xl border-2 border-gray-100 shadow-sm overflow-hidden"
+                      style={{ width: qrSize + 32, height: qrSize + 32 }}
+                    >
+                      {loadingToken && !eventUrl ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                          <span className="text-sm text-gray-500">Generating...</span>
+                        </div>
+                      ) : eventUrl ? (
+                        <QRCodeCanvas
+                          value={eventUrl}
+                          size={qrSize}
+                          level="H"
+                          includeMargin={true}
+                        />
+                      ) : (
+                        <div className="text-gray-500 text-sm text-center px-4">
+                          QR code unavailable
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Progress indicator */}
+                    {secondsLeft !== null && eventUrl && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-48 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-indigo-600 transition-all duration-1000 ease-linear"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600 mb-1">
+                      Code refreshes automatically
+                    </p>
+                    {secondsLeft !== null && (
+                      <p className="text-xs text-gray-400">
+                        Next refresh in {secondsLeft}s
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Progress indicator */}
-                {secondsLeft !== null && eventUrl && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-48 h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-indigo-600 transition-all duration-1000 ease-linear"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                      Display on a screen for attendees to scan
+                    </p>
+                    <button
+                      onClick={() => setShowModal(false)}
+                      className="btn btn-secondary text-sm"
+                    >
+                      Close
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600 mb-1">
-                  Code refreshes automatically
-                </p>
-                {secondsLeft !== null && (
-                  <p className="text-xs text-gray-400">
-                    Next refresh in {secondsLeft}s
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">
-                  Display on a screen for attendees to scan
-                </p>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="btn btn-secondary text-sm"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
