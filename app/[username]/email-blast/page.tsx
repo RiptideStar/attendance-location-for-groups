@@ -40,6 +40,7 @@ export default function EmailBlastPage() {
   const [selectAll, setSelectAll] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [firstTimeOnly, setFirstTimeOnly] = useState(false);
 
   // Email content (compose tab)
   const [subject, setSubject] = useState("");
@@ -104,6 +105,7 @@ export default function EmailBlastPage() {
           eventIds: selectAll ? [] : selectedEventIds,
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
+          firstTimeOnly,
         }),
       });
 
@@ -134,6 +136,7 @@ export default function EmailBlastPage() {
           eventIds: selectAll ? [] : selectedEventIds,
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
+          firstTimeOnly,
           subject,
           body,
           isHtml,
@@ -160,6 +163,7 @@ export default function EmailBlastPage() {
     setSelectAll(false);
     setDateFrom("");
     setDateTo("");
+    setFirstTimeOnly(false);
     setSubject("");
     setBody("");
     setIsHtml(false);
@@ -242,6 +246,7 @@ export default function EmailBlastPage() {
             eventIds: selectAll ? [] : selectedEventIds,
             dateFrom: dateFrom || undefined,
             dateTo: dateTo || undefined,
+            firstTimeOnly,
           }),
         }
       );
@@ -423,6 +428,8 @@ export default function EmailBlastPage() {
                   dateTo={dateTo}
                   onDateFromChange={setDateFrom}
                   onDateToChange={setDateTo}
+                  firstTimeOnly={firstTimeOnly}
+                  onFirstTimeOnlyChange={setFirstTimeOnly}
                   onNext={
                     isTemplateSendMode
                       ? handleTemplateSend

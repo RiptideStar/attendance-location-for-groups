@@ -21,8 +21,42 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { templateId } = await params;
     const body: TemplateSendRequest = await request.json();
-    const { eventIds, dateFrom, dateTo } = body;
+    const { eventIds, dateFrom, dateTo, firstTimeOnly } = body;
     const organizationId = session.user.organizationId;
+
+    let earliestStartByEmail: Map<string, number> | null = null;
+    if (firstTimeOnly) {
+      const { data: allAttendees, error: allError } = await supabaseAdmin
+        .from("attendees")
+        .select(
+          `
+          email,
+          events!inner (
+            start_time
+          )
+        `
+        )
+        .eq("organization_id", organizationId);
+
+      if (allError) {
+        console.error("Error fetching attendee history:", allError);
+        return NextResponse.json(
+          { error: "Failed to fetch attendee history" },
+          { status: 500 }
+        );
+      }
+
+      earliestStartByEmail = new Map<string, number>();
+      for (const attendee of allAttendees || []) {
+        const email = String(attendee.email).toLowerCase();
+        const event = attendee.events as unknown as { start_time: string };
+        const startMs = new Date(event.start_time).getTime();
+        const existing = earliestStartByEmail.get(email);
+        if (existing === undefined || startMs < existing) {
+          earliestStartByEmail.set(email, startMs);
+        }
+      }
+    }
 
     const { data: organization, error: organizationError } = await supabaseAdmin
       .from("organizations")
@@ -182,6 +216,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         check_in_lat: number;
         check_in_lng: number;
         user_agent: string | null;
+        eventStartMs: number;
         event: {
           id: string;
           title: string;
@@ -201,7 +236,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     for (const attendee of attendees || []) {
       const email = attendee.email.toLowerCase();
-      if (!recipientMap.has(email) && !sentEmailSet.has(email)) {
+      if (sentEmailSet.has(email)) {
+        continue;
+      }
+      const eventStartMs = new Date(
+        (attendee.events as unknown as { start_time: string }).start_time
+      ).getTime();
+      const existing = recipientMap.get(email);
+      if (!existing || eventStartMs < existing.eventStartMs) {
         const event = attendee.events as unknown as {
           id: string;
           title: string;
@@ -223,12 +265,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           check_in_lat: attendee.check_in_lat,
           check_in_lng: attendee.check_in_lng,
           user_agent: attendee.user_agent ?? null,
+          eventStartMs,
           event,
         });
       }
     }
 
-    const recipients = Array.from(recipientMap.values());
+    let recipients = Array.from(recipientMap.values());
+    if (firstTimeOnly && earliestStartByEmail) {
+      recipients = recipients.filter((recipient) => {
+        const earliest = earliestStartByEmail!.get(recipient.email.toLowerCase());
+        return earliest !== undefined && earliest === recipient.eventStartMs;
+      });
+    }
     const skippedCount = sentEmailSet.size;
 
     if (recipients.length === 0) {

@@ -45,6 +45,7 @@ export interface TemplateSendRequest {
   eventIds: string[]; // Empty array means all events
   dateFrom?: string;
   dateTo?: string;
+  firstTimeOnly?: boolean; // Only attendees whose first event is the selected event
 }
 
 // Response from template send

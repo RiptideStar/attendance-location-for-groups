@@ -12,8 +12,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { eventIds, dateFrom, dateTo } = await request.json();
+    const { eventIds, dateFrom, dateTo, firstTimeOnly } = await request.json();
     const organizationId = session.user.organizationId;
+
+    let earliestStartByEmail: Map<string, number> | null = null;
+    if (firstTimeOnly) {
+      const { data: allAttendees, error: allError } = await supabaseAdmin
+        .from("attendees")
+        .select(
+          `
+          email,
+          events!inner (
+            start_time
+          )
+        `
+        )
+        .eq("organization_id", organizationId);
+
+      if (allError) {
+        console.error("Error fetching attendee history:", allError);
+        return NextResponse.json(
+          { error: "Failed to fetch attendee history" },
+          { status: 500 }
+        );
+      }
+
+      earliestStartByEmail = new Map<string, number>();
+      for (const attendee of allAttendees || []) {
+        const email = String(attendee.email).toLowerCase();
+        const event = attendee.events as unknown as { start_time: string };
+        const startMs = new Date(event.start_time).getTime();
+        const existing = earliestStartByEmail.get(email);
+        if (existing === undefined || startMs < existing) {
+          earliestStartByEmail.set(email, startMs);
+        }
+      }
+    }
 
     // Build query for attendees with event details
     let query = supabaseAdmin
@@ -57,30 +91,40 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduplicate by email (keep first occurrence)
-    const emailMap = new Map<string, { email: string; name: string }>();
+    const emailMap = new Map<string, { email: string; name: string; eventStartMs: number }>();
     const eventSet = new Set<string>();
     const eventTitles: string[] = [];
 
     for (const attendee of attendees || []) {
-      if (!emailMap.has(attendee.email)) {
-        emailMap.set(attendee.email, {
-          email: attendee.email,
-          name: attendee.name,
-        });
-      }
-
       const event = attendee.events as unknown as {
         id: string;
         title: string;
         start_time: string;
       };
+      const emailKey = String(attendee.email).toLowerCase();
+      const eventStartMs = new Date(event.start_time).getTime();
+      const existing = emailMap.get(emailKey);
+      if (!existing || eventStartMs < existing.eventStartMs) {
+        emailMap.set(emailKey, {
+          email: attendee.email,
+          name: attendee.name,
+          eventStartMs,
+        });
+      }
+
       if (event && !eventSet.has(event.id)) {
         eventSet.add(event.id);
         eventTitles.push(event.title);
       }
     }
 
-    const recipients = Array.from(emailMap.values());
+    let recipients = Array.from(emailMap.values());
+    if (firstTimeOnly && earliestStartByEmail) {
+      recipients = recipients.filter((recipient) => {
+        const earliest = earliestStartByEmail!.get(recipient.email.toLowerCase());
+        return earliest !== undefined && earliest === recipient.eventStartMs;
+      });
+    }
 
     const preview: EmailBlastPreview = {
       recipientCount: recipients.length,

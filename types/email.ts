@@ -15,6 +15,7 @@ export interface EmailBlastRequest {
   eventIds: string[]; // Empty array means "all events"
   dateFrom?: string; // Optional ISO date string for filtering
   dateTo?: string; // Optional ISO date string for filtering
+  firstTimeOnly?: boolean; // Only attendees whose first event is the selected event
   subject: string;
   body: string;
   isHtml: boolean; // Whether body is HTML or plain text

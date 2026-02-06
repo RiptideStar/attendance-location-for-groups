@@ -17,6 +17,8 @@ interface EventMultiSelectProps {
   dateTo: string;
   onDateFromChange: (date: string) => void;
   onDateToChange: (date: string) => void;
+  firstTimeOnly: boolean;
+  onFirstTimeOnlyChange: (firstTimeOnly: boolean) => void;
   onNext: () => void;
   nextButtonText?: string;
 }
@@ -32,6 +34,8 @@ export function EventMultiSelect({
   dateTo,
   onDateFromChange,
   onDateToChange,
+  firstTimeOnly,
+  onFirstTimeOnlyChange,
   onNext,
   nextButtonText = "Next: Compose Email",
 }: EventMultiSelectProps) {
@@ -109,6 +113,24 @@ export function EventMultiSelect({
         </div>
       </div>
 
+      {/* Audience filter */}
+      <div className="mb-6">
+        <label className="flex items-start gap-3 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={firstTimeOnly}
+            onChange={(e) => onFirstTimeOnlyChange(e.target.checked)}
+            className="mt-0.5 h-4 w-4 text-blue-600 rounded border-gray-300"
+          />
+          <span>
+            Only first-time attendees (no events before the selected event)
+            <span className="block text-xs text-gray-500 mt-1">
+              Uses each attendee&apos;s earliest event to determine eligibility.
+            </span>
+          </span>
+        </label>
+      </div>
+
       {/* Select all / clear buttons */}
       <div className="flex gap-2 mb-4">
         <button
@@ -180,6 +202,7 @@ export function EventMultiSelect({
                 selectedEventIds.length !== 1 ? "s" : ""
               } selected`}{" "}
           ({totalAttendees} attendees before deduplication)
+          {firstTimeOnly ? " · First-time filter enabled" : ""}
         </div>
         <button
           onClick={onNext}
