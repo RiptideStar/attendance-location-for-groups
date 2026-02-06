@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
           organization_id: organizationId,
           name: attendee.name,
           email: attendee.email,
-          check_in_time: attendee.check_in_time,
+          check_in_time: attendee.check_in_time ?? undefined,
           check_in_lat: attendee.check_in_lat,
           check_in_lng: attendee.check_in_lng,
           user_agent: attendee.user_agent ?? null,
