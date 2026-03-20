@@ -40,6 +40,55 @@ export function EventForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Luma import state
+  const [lumaUrl, setLumaUrl] = useState("");
+  const [lumaImporting, setLumaImporting] = useState(false);
+  const [lumaError, setLumaError] = useState("");
+  const [lumaSuccess, setLumaSuccess] = useState(false);
+
+  const handleLumaImport = async () => {
+    if (!lumaUrl.trim()) {
+      setLumaError("Please enter a Luma event URL");
+      return;
+    }
+
+    setLumaImporting(true);
+    setLumaError("");
+    setLumaSuccess(false);
+
+    try {
+      const response = await fetch("/api/import-luma", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: lumaUrl.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to import event");
+      }
+
+      const data = await response.json();
+
+      setFormData({
+        title: data.title || formData.title,
+        startTime: data.startTime ? utcToLocalInput(data.startTime) : formData.startTime,
+        endTime: data.endTime ? utcToLocalInput(data.endTime) : formData.endTime,
+        locationAddress: data.locationAddress || formData.locationAddress,
+        locationLat: data.latitude ?? formData.locationLat,
+        locationLng: data.longitude ?? formData.locationLng,
+        timezone: data.timezone || browserTimezone,
+      });
+
+      setLumaSuccess(true);
+      setErrors({});
+    } catch (err) {
+      setLumaError(err instanceof Error ? err.message : "Failed to import event");
+    } finally {
+      setLumaImporting(false);
+    }
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -96,6 +145,48 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Luma Import - only show in create mode */}
+      {mode === "create" && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <label className="block text-sm font-medium text-purple-800 mb-2">
+            Import from Luma
+          </label>
+          <p className="text-sm text-purple-600 mb-3">
+            Paste a lu.ma event link to auto-fill all fields
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={lumaUrl}
+              onChange={(e) => {
+                setLumaUrl(e.target.value);
+                setLumaError("");
+                setLumaSuccess(false);
+              }}
+              className="flex-1 px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="https://lu.ma/your-event"
+              disabled={lumaImporting || loading}
+            />
+            <button
+              type="button"
+              onClick={handleLumaImport}
+              disabled={lumaImporting || loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {lumaImporting ? "Importing..." : "Import"}
+            </button>
+          </div>
+          {lumaError && (
+            <p className="text-red-600 text-sm mt-2">{lumaError}</p>
+          )}
+          {lumaSuccess && (
+            <p className="text-green-600 text-sm mt-2">
+              Event imported successfully! Review the details below.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Event Title */}
       <div>
         <label
