@@ -70,13 +70,49 @@ export function EventForm({
 
       const data = await response.json();
 
+      let lat = data.latitude;
+      let lng = data.longitude;
+
+      // If coordinates are missing, try to match against saved org locations by name
+      if ((lat == null || lng == null) && data.locationAddress) {
+        try {
+          const locRes = await fetch("/api/locations");
+          if (locRes.ok) {
+            const savedLocations = await locRes.json();
+            if (Array.isArray(savedLocations)) {
+              const needle = data.locationAddress.toLowerCase().trim();
+              const match = savedLocations.find(
+                (loc: { label?: string; address?: string }) => {
+                  const label = (loc.label || "").toLowerCase().trim();
+                  const address = (loc.address || "").toLowerCase().trim();
+                  return (
+                    label === needle ||
+                    address === needle ||
+                    needle.includes(label) ||
+                    label.includes(needle) ||
+                    needle.includes(address) ||
+                    address.includes(needle)
+                  );
+                }
+              );
+              if (match) {
+                lat = match.lat;
+                lng = match.lng;
+              }
+            }
+          }
+        } catch {
+          // Silently continue without match
+        }
+      }
+
       setFormData({
         title: data.title || formData.title,
         startTime: data.startTime ? utcToLocalInput(data.startTime) : formData.startTime,
         endTime: data.endTime ? utcToLocalInput(data.endTime) : formData.endTime,
         locationAddress: data.locationAddress || formData.locationAddress,
-        locationLat: data.latitude ?? formData.locationLat,
-        locationLng: data.longitude ?? formData.locationLng,
+        locationLat: lat ?? formData.locationLat,
+        locationLng: lng ?? formData.locationLng,
         timezone: data.timezone || browserTimezone,
       });
 
@@ -152,7 +188,7 @@ export function EventForm({
             Import from Luma
           </label>
           <p className="text-sm text-purple-600 mb-3">
-            Paste a lu.ma event link to auto-fill all fields
+            Paste a luma.com or lu.ma event link to auto-fill all fields
           </p>
           <div className="flex gap-2">
             <input
@@ -164,7 +200,7 @@ export function EventForm({
                 setLumaSuccess(false);
               }}
               className="flex-1 px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="https://lu.ma/your-event"
+              placeholder="https://luma.com/your-event"
               disabled={lumaImporting || loading}
             />
             <button
