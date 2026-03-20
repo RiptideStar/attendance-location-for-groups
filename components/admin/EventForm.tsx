@@ -70,13 +70,51 @@ export function EventForm({
 
       const data = await response.json();
 
+      let resolvedLat: number | null = data.latitude;
+      let resolvedLng: number | null = data.longitude;
+
+      // If Luma didn't provide coordinates but gave us an address,
+      // try to match against saved organization locations
+      if (resolvedLat == null && resolvedLng == null && data.locationAddress) {
+        try {
+          const locRes = await fetch("/api/locations");
+          if (locRes.ok) {
+            const savedLocations = await locRes.json();
+            if (Array.isArray(savedLocations) && savedLocations.length > 0) {
+              const lumaAddr = data.locationAddress.toLowerCase();
+              // Try exact substring match first, then fuzzy word overlap
+              const match = savedLocations.find(
+                (loc: { label: string; address: string }) =>
+                  lumaAddr.includes(loc.label.toLowerCase()) ||
+                  lumaAddr.includes(loc.address.toLowerCase()) ||
+                  loc.label.toLowerCase().includes(lumaAddr) ||
+                  loc.address.toLowerCase().includes(lumaAddr)
+              ) ?? savedLocations.find(
+                (loc: { label: string; address: string }) => {
+                  const lumaWords = lumaAddr.split(/[\s,]+/).filter((w: string) => w.length > 2);
+                  const locWords = `${loc.label} ${loc.address}`.toLowerCase().split(/[\s,]+/);
+                  const overlap = lumaWords.filter((w: string) => locWords.includes(w));
+                  return overlap.length >= 2;
+                }
+              );
+              if (match) {
+                resolvedLat = match.lat;
+                resolvedLng = match.lng;
+              }
+            }
+          }
+        } catch {
+          // Location matching is best-effort
+        }
+      }
+
       setFormData({
         title: data.title || formData.title,
         startTime: data.startTime ? utcToLocalInput(data.startTime) : formData.startTime,
         endTime: data.endTime ? utcToLocalInput(data.endTime) : formData.endTime,
         locationAddress: data.locationAddress || formData.locationAddress,
-        locationLat: data.latitude ?? formData.locationLat,
-        locationLng: data.longitude ?? formData.locationLng,
+        locationLat: resolvedLat ?? formData.locationLat,
+        locationLng: resolvedLng ?? formData.locationLng,
         timezone: data.timezone || browserTimezone,
       });
 
