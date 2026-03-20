@@ -15,7 +15,10 @@ interface LumaEventData {
  * Supports formats like:
  *   https://lu.ma/abc123
  *   https://lu.ma/event/evt-abc123
+ *   https://luma.com/abc123
+ *   https://luma.com/event/evt-abc123
  *   lu.ma/abc123
+ *   luma.com/abc123
  */
 function extractLumaSlug(url: string): string | null {
   // Normalize: add https:// if missing
@@ -26,7 +29,10 @@ function extractLumaSlug(url: string): string | null {
 
   try {
     const parsed = new URL(normalized);
-    if (!parsed.hostname.endsWith("lu.ma")) {
+    const isLuma =
+      parsed.hostname.endsWith("lu.ma") ||
+      parsed.hostname.endsWith("luma.com");
+    if (!isLuma) {
       return null;
     }
 
@@ -195,7 +201,7 @@ export async function POST(request: NextRequest) {
     const slug = extractLumaSlug(url);
     if (!slug) {
       return NextResponse.json(
-        { error: "Invalid Luma URL. Please provide a valid lu.ma event link." },
+        { error: "Invalid Luma URL. Please provide a valid lu.ma or luma.com event link." },
         { status: 400 }
       );
     }
