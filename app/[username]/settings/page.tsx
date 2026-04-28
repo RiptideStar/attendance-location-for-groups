@@ -22,6 +22,7 @@ export default function OrganizationSettingsPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -60,6 +61,34 @@ export default function OrganizationSettingsPage() {
 
     fetchSettings();
   }, []);
+
+  const handleClear = async () => {
+    if (!confirm("Clear all SMTP settings? This cannot be undone.")) return;
+    setError("");
+    setSuccess("");
+    setClearing(true);
+    try {
+      const response = await fetch("/api/organization/smtp", { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to clear SMTP settings");
+      }
+      setSmtpHost("");
+      setSmtpPort("");
+      setSmtpUser("");
+      setSmtpPass("");
+      setSmtpSecure(true);
+      setSmtpFromEmail("");
+      setSmtpFromName("");
+      setSmtpReplyTo("");
+      setHasPassword(false);
+      setSuccess("SMTP settings cleared.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -259,10 +288,10 @@ export default function OrganizationSettingsPage() {
                 />
               </div>
 
-              <div className="pt-4">
+              <div className="pt-4 flex items-center gap-3">
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || clearing}
                   className="btn btn-primary"
                 >
                   {saving ? (
@@ -276,6 +305,14 @@ export default function OrganizationSettingsPage() {
                   ) : (
                     "Save Settings"
                   )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  disabled={saving || clearing}
+                  className="btn btn-secondary text-red-600 hover:text-red-700"
+                >
+                  {clearing ? "Clearing..." : "Clear Settings"}
                 </button>
               </div>
             </form>

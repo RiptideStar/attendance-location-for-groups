@@ -123,3 +123,32 @@ export async function PUT(request: NextRequest) {
     hasPassword: Boolean(updated.smtp_pass),
   });
 }
+
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.organizationId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { error } = await supabaseAdmin
+    .from("organizations")
+    .update({
+      smtp_host: null,
+      smtp_port: null,
+      smtp_user: null,
+      smtp_pass: null,
+      smtp_pass_iv: null,
+      smtp_pass_tag: null,
+      smtp_secure: null,
+      smtp_from_email: null,
+      smtp_from_name: null,
+      smtp_reply_to: null,
+    })
+    .eq("id", session.user.organizationId);
+
+  if (error) {
+    return NextResponse.json({ error: "Failed to clear SMTP settings" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
