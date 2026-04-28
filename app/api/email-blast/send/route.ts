@@ -25,8 +25,32 @@ export async function POST(request: NextRequest) {
       isHtml,
       attachments,
       firstTimeOnly,
+      minAttendanceCount,
     } = body;
     const organizationId = session.user.organizationId;
+
+    // Build per-email total attendance count across all org events
+    let attendanceCountByEmail: Map<string, number> | null = null;
+    if (minAttendanceCount && minAttendanceCount > 1) {
+      const { data: allAttendees, error: countError } = await supabaseAdmin
+        .from("attendees")
+        .select("email")
+        .eq("organization_id", organizationId);
+
+      if (countError) {
+        console.error("Error fetching attendance counts:", countError);
+        return NextResponse.json(
+          { error: "Failed to fetch attendance counts" },
+          { status: 500 }
+        );
+      }
+
+      attendanceCountByEmail = new Map<string, number>();
+      for (const attendee of allAttendees || []) {
+        const emailKey = String(attendee.email).toLowerCase();
+        attendanceCountByEmail.set(emailKey, (attendanceCountByEmail.get(emailKey) || 0) + 1);
+      }
+    }
 
     let earliestStartByEmail: Map<string, number> | null = null;
     if (firstTimeOnly) {
@@ -263,6 +287,12 @@ export async function POST(request: NextRequest) {
       recipients = recipients.filter((recipient) => {
         const earliest = earliestStartByEmail!.get(recipient.email.toLowerCase());
         return earliest !== undefined && earliest === recipient.eventStartMs;
+      });
+    }
+    if (attendanceCountByEmail && minAttendanceCount && minAttendanceCount > 1) {
+      recipients = recipients.filter((recipient) => {
+        const count = attendanceCountByEmail!.get(recipient.email.toLowerCase()) || 0;
+        return count >= minAttendanceCount;
       });
     }
 

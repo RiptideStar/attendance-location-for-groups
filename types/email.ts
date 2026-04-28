@@ -16,6 +16,7 @@ export interface EmailBlastRequest {
   dateFrom?: string; // Optional ISO date string for filtering
   dateTo?: string; // Optional ISO date string for filtering
   firstTimeOnly?: boolean; // Only attendees whose first event is the selected event
+  minAttendanceCount?: number; // Only attendees who have attended at least N events total
   subject: string;
   body: string;
   isHtml: boolean; // Whether body is HTML or plain text

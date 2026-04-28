@@ -41,6 +41,7 @@ export default function EmailBlastPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [firstTimeOnly, setFirstTimeOnly] = useState(false);
+  const [minAttendanceCount, setMinAttendanceCount] = useState(1);
 
   // Email content (compose tab)
   const [subject, setSubject] = useState("");
@@ -106,6 +107,7 @@ export default function EmailBlastPage() {
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
           firstTimeOnly,
+          minAttendanceCount: minAttendanceCount > 1 ? minAttendanceCount : undefined,
         }),
       });
 
@@ -137,6 +139,7 @@ export default function EmailBlastPage() {
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
           firstTimeOnly,
+          minAttendanceCount: minAttendanceCount > 1 ? minAttendanceCount : undefined,
           subject,
           body,
           isHtml,
@@ -164,6 +167,7 @@ export default function EmailBlastPage() {
     setDateFrom("");
     setDateTo("");
     setFirstTimeOnly(false);
+    setMinAttendanceCount(1);
     setSubject("");
     setBody("");
     setIsHtml(false);
@@ -247,6 +251,7 @@ export default function EmailBlastPage() {
             dateFrom: dateFrom || undefined,
             dateTo: dateTo || undefined,
             firstTimeOnly,
+            minAttendanceCount: minAttendanceCount > 1 ? minAttendanceCount : undefined,
           }),
         }
       );
@@ -430,6 +435,8 @@ export default function EmailBlastPage() {
                   onDateToChange={setDateTo}
                   firstTimeOnly={firstTimeOnly}
                   onFirstTimeOnlyChange={setFirstTimeOnly}
+                  minAttendanceCount={minAttendanceCount}
+                  onMinAttendanceCountChange={setMinAttendanceCount}
                   onNext={
                     isTemplateSendMode
                       ? handleTemplateSend
