@@ -19,6 +19,8 @@ interface EventMultiSelectProps {
   onDateToChange: (date: string) => void;
   firstTimeOnly: boolean;
   onFirstTimeOnlyChange: (firstTimeOnly: boolean) => void;
+  minAttendanceCount: number;
+  onMinAttendanceCountChange: (count: number) => void;
   onNext: () => void;
   nextButtonText?: string;
 }
@@ -36,6 +38,8 @@ export function EventMultiSelect({
   onDateToChange,
   firstTimeOnly,
   onFirstTimeOnlyChange,
+  minAttendanceCount,
+  onMinAttendanceCountChange,
   onNext,
   nextButtonText = "Next: Compose Email",
 }: EventMultiSelectProps) {
@@ -114,7 +118,7 @@ export function EventMultiSelect({
       </div>
 
       {/* Audience filter */}
-      <div className="mb-6">
+      <div className="mb-4">
         <label className="flex items-start gap-3 text-sm text-gray-700">
           <input
             type="checkbox"
@@ -129,6 +133,25 @@ export function EventMultiSelect({
             </span>
           </span>
         </label>
+      </div>
+
+      {/* Min attendance count filter */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Minimum events attended
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            min={1}
+            value={minAttendanceCount}
+            onChange={(e) => onMinAttendanceCountChange(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <span className="text-sm text-gray-500">
+            Only include attendees who have attended at least this many events total
+          </span>
+        </div>
       </div>
 
       {/* Select all / clear buttons */}
@@ -203,6 +226,7 @@ export function EventMultiSelect({
               } selected`}{" "}
           ({totalAttendees} attendees before deduplication)
           {firstTimeOnly ? " · First-time filter enabled" : ""}
+          {minAttendanceCount > 1 ? ` · Min ${minAttendanceCount} events` : ""}
         </div>
         <button
           onClick={onNext}
