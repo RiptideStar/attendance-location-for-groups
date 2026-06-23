@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/nodemailer": "^7.0.9",
     "@types/qrcode.react": "^3.0.0",
     "@types/react": "^19",
